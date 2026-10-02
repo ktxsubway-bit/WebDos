@@ -50,7 +50,6 @@
     
     <script>
         (function() {
-            // Localization resource tables
             const i18n = {
                 en: {
                     helpHeader: "For more information on a specific command, type HELP command-name.",
@@ -95,7 +94,8 @@
                     editUsage: "Usage: EDIT filename.txt",
                     jsRunning: "Executing JavaScript file: ",
                     jsSuccess: "JavaScript execution finished.",
-                    jsError: "JavaScript Runtime Error: "
+                    jsError: "JavaScript Runtime Error: ",
+                    rootStripped: "[INFO] Top-level folder wrapper removed. Files unpacked directly into current directory."
                 },
                 kr: {
                     helpHeader: "특정 명령어에 대한 자세한 내용이 필요하면 HELP 명령어 이름을 입력하십시오.",
@@ -108,7 +108,7 @@
                     reqParam: "필수 인자가 누락되었습니다",
                     invDir: "유효하지 않은 폴더입니다",
                     fileNotFound: "파일을 찾을 수 없습니다",
-                    dirOf: "C:\\ 디렉토리:",
+                    dirOf: "C:\\ 디렉토리 및 파일 목록:",
                     filesBytes: "개 파일 ",
                     bytesStr: " 바이트",
                     dirsStr: "개 폴더",
@@ -140,7 +140,8 @@
                     editUsage: "사용법: EDIT 파일이름.txt",
                     jsRunning: "자바스크립트 파일 실행 중: ",
                     jsSuccess: "자바스크립트 실행이 완료되었습니다.",
-                    jsError: "자바스크립트 런타임 오류: "
+                    jsError: "자바스크립트 런타임 오류: ",
+                    rootStripped: "[안내] 최상위 폴더 감싸기가 감지되어 내부 파일들이 최상위 경로로 자동 배치되었습니다."
                 },
                 jp: {
                     helpHeader: "特定のコマンドに関する詳細情報が必要な場合は、HELP コマンド名 を入力してください。",
@@ -153,7 +154,7 @@
                     reqParam: "必須パラメータがありません",
                     invDir: "無効なディレクトリです",
                     fileNotFound: "ファイルが見つかりません",
-                    dirOf: "C:\\ のディレクトリ:",
+                    dirOf: "C:\\ のディレクトリおよびファイル一覧:",
                     filesBytes: " 個のファイル ",
                     bytesStr: " バイト",
                     dirsStr: " 個のディレクトリ",
@@ -185,7 +186,8 @@
                     editUsage: "使用方法: EDIT ファイル名.txt",
                     jsRunning: "JavaScriptファイルを実行中: ",
                     jsSuccess: "JavaScriptの実行が完了しました。",
-                    jsError: "JavaScript実行エラー: "
+                    jsError: "JavaScript実行エラー: ",
+                    rootStripped: "[情報] 最上位フォルダの階層を自動解除し、ファイルを直接展開しました。"
                 },
                 cn: {
                     helpHeader: "有关某个命令的详细信息，请键入 HELP 命令名。",
@@ -198,7 +200,7 @@
                     reqParam: "缺少必要参数",
                     invDir: "无效的目录",
                     fileNotFound: "未找到文件",
-                    dirOf: "C:\\ 的目录",
+                    dirOf: "C:\\ 的目录和文件列表:",
                     filesBytes: " 个文件 ",
                     bytesStr: " 字节",
                     dirsStr: " 个目录",
@@ -230,7 +232,8 @@
                     editUsage: "用法: EDIT 文件名.txt",
                     jsRunning: "正在执行 JavaScript 文件: ",
                     jsSuccess: "JavaScript 执行完成。",
-                    jsError: "JavaScript 运行时错误: "
+                    jsError: "JavaScript 运行时错误: ",
+                    rootStripped: "[提示] 已自动移除最外层文件夹，文件已直接解压至当前目录。"
                 }
             };
 
@@ -331,7 +334,6 @@
             let currentLang = 'en';
             const tr = k => (i18n[currentLang] && i18n[currentLang][k]) || i18n.en[k] || k;
 
-            // Auto detect browser / system language instantly
             (function detectBrowserLanguage() {
                 try {
                     const navLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
@@ -479,24 +481,60 @@
                     out('File deleted successfully.', 'ok');
                 },
                 erase(a){ cmds.del(a); },
+                
                 dir(a){
-                    const p=a[0]?resolve(a[0]):cwd, k=lc(p);
-                    if(!dirs.has(k)) return out(tr('fileNotFound'), 'err');
-                    out(' ' + tr('dirOf') + p.join('\\').toUpperCase());
+                    const targetPath = a[0] ? resolve(a[0]) : cwd;
+                    const k = lc(targetPath);
+                    if(!dirs.has(k) && targetPath.length > 0) return out(tr('fileNotFound'), 'err');
+
+                    out(' ' + tr('dirOf') + targetPath.join('\\').toUpperCase());
                     out('');
-                    let nf=0, nd=0, sz=0;
-                    for(const d of dirs) if(d&&par(d)===k){
-                        nd++;
-                        const nm=[...files.values()].map(v=>v.p.split('/')).map(s=>s[p.length]).find(x=>x&&(k?k+'/':'')+x.toLowerCase()===d)||base(d);
-                        out(nm.toUpperCase().padEnd(14)+'<DIR>');
+
+                    let totalFiles = 0;
+                    let totalDirs = 0;
+                    let totalSize = 0;
+
+                    // Direct subdirectories
+                    for (const d of dirs) {
+                        if (d && par(d) === k) {
+                            totalDirs++;
+                            const folderName = [...files.values()]
+                                .map(v => v.p.split('/'))
+                                .map(s => s[targetPath.length])
+                                .find(x => x && (k ? k + '/' : '') + x.toLowerCase() === d) || base(d);
+                            out(folderName.toUpperCase().padEnd(20) + '<DIR>');
+                        }
                     }
-                    for(const [fk,v] of files) if(par(fk)===k){
-                        nf++;
-                        sz+=v.d.length;
-                        out(base(v.p).toUpperCase().padEnd(14)+fmt(v.d.length).padStart(12));
+
+                    // Direct files in current folder
+                    for (const [fk, v] of files) {
+                        if (par(fk) === k) {
+                            totalFiles++;
+                            totalSize += v.d.length;
+                            out(base(v.p).toUpperCase().padEnd(20) + fmt(v.d.length).padStart(12));
+                        }
                     }
-                    out(`  ${nf}${tr('filesBytes')}${fmt(sz)}${tr('bytesStr')}`);
-                    out(`  ${nd}${tr('dirsStr')}`);
+
+                    // Also display nested files directly so user can see all files immediately
+                    const nestedFiles = [...files.values()].filter(v => {
+                        const fileKey = v.p.toLowerCase();
+                        return fileKey.startsWith(k ? k + '/' : '') && par(fileKey) !== k;
+                    });
+
+                    if (nestedFiles.length > 0) {
+                        out('');
+                        out('--- SUBFOLDER FILES (SUB-DIRECTORY CONTENTS) ---', 'cyan');
+                        for (const v of nestedFiles) {
+                            totalFiles++;
+                            totalSize += v.d.length;
+                            const relPath = k ? v.p.slice(k.length + 1) : v.p;
+                            out(relPath.replace(/\//g, '\\').toUpperCase().padEnd(32) + fmt(v.d.length).padStart(12), 'hi');
+                        }
+                    }
+
+                    out('');
+                    out(`  ${totalFiles}${tr('filesBytes')}${fmt(totalSize)}${tr('bytesStr')}`);
+                    out(`  ${totalDirs}${tr('dirsStr')}`);
                     out(`  32,768,000 bytes free`);
                 },
                 diskpart(){ out('Microsoft DiskPart version 1.02\nDISK 0 : 32 MB Virtual Web Storage'); },
@@ -835,24 +873,81 @@ ${dirp?'cd '+dirp+'\n':''}${base(inner)}
             $('x').onclick=stopGame;
 
             async function ingest(list){
-                let n=0; const cp=cwd.join('/'), pre=cp?cp+'/':'';
-                for(const f of list){
-                    if(/\.(zip|jsdos)$/i.test(f.name)&&!f.webkitRelativePath){
-                        const root=f.name.replace(/\.[^.]+$/,'');
-                        try{
-                            const z=await JSZip.loadAsync(f);
-                            const ents=Object.values(z.files).filter(e=>!e.dir&&!/^__MACOSX\/|(^|\/)\.DS_Store$/.test(e.name));
-                            const tops=new Set(ents.map(e=>e.name.split('/')[0]));
-                            const strip=tops.size===1&&ents.every(e=>e.name.includes('/'));
-                            for(const e of ents){let nm=e.name;if(strip)nm=nm.split('/').slice(1).join('/');addFile(pre+root+'/'+nm,await e.async('uint8array'));n++;}
-                            out(`  ${f.name} → ${root}\\`+tr('zipUnpack'),'ok');
-                        }catch(e){out(f.name+': '+tr('zipFail'),'err')}
-                    }else{
-                        const relPath = f.webkitRelativePath || f.name;
-                        addFile(pre+relPath,new Uint8Array(await f.arrayBuffer())); n++;
+                let n = 0; 
+                const cp = cwd.join('/'), pre = cp ? cp + '/' : '';
+                
+                // Helper to check and strip single top level folder if present
+                const preparedItems = [];
+                for (const f of list) {
+                    if (/\.(zip|jsdos)$/i.test(f.name) && !f.webkitRelativePath) {
+                        preparedItems.push({ type: 'archive', file: f });
+                    } else {
+                        const relPath = (f.webkitRelativePath || f.name).replace(/\\/g, '/');
+                        preparedItems.push({ type: 'file', file: f, path: relPath });
                     }
                 }
-                out(`${n}`+tr('uploadComplete'),'ok');
+
+                // Detect if all standard uploaded files share a single root folder
+                const filePaths = preparedItems.filter(i => i.type === 'file').map(i => i.path);
+                const firstSlashIndexes = filePaths.map(p => p.indexOf('/'));
+                const hasSubfolders = filePaths.length > 0 && firstSlashIndexes.every(idx => idx > 0);
+                
+                let rootFolderToStrip = null;
+                if (hasSubfolders) {
+                    const topFolders = new Set(filePaths.map(p => p.split('/')[0]));
+                    if (topFolders.size === 1) {
+                        rootFolderToStrip = [...topFolders][0];
+                    }
+                }
+
+                if (rootFolderToStrip) {
+                    out(tr('rootStripped'), 'yellow');
+                }
+
+                const uploadedNames = [];
+
+                for (const item of preparedItems) {
+                    if (item.type === 'archive') {
+                        const f = item.file;
+                        const root = f.name.replace(/\.[^.]+$/,'');
+                        try {
+                            const z = await JSZip.loadAsync(f);
+                            const ents = Object.values(z.files).filter(e => !e.dir && !/^__MACOSX\/|(^|\/)\.DS_Store$/.test(e.name));
+                            const tops = new Set(ents.map(e => e.name.split('/')[0]));
+                            const strip = tops.size === 1 && ents.every(e => e.name.includes('/'));
+                            for (const e of ents) {
+                                let nm = e.name;
+                                if (strip) nm = nm.split('/').slice(1).join('/');
+                                const targetPath = pre + (strip ? '' : root + '/') + nm;
+                                addFile(targetPath, await e.async('uint8array'));
+                                uploadedNames.push(targetPath);
+                                n++;
+                            }
+                            out(`  ${f.name} → ${root}\\` + tr('zipUnpack'), 'ok');
+                        } catch(e) {
+                            out(f.name + ': ' + tr('zipFail'), 'err');
+                        }
+                    } else {
+                        let finalPath = item.path;
+                        if (rootFolderToStrip && finalPath.startsWith(rootFolderToStrip + '/')) {
+                            finalPath = finalPath.slice(rootFolderToStrip.length + 1);
+                        }
+                        const targetPath = pre + finalPath;
+                        addFile(targetPath, new Uint8Array(await item.file.arrayBuffer()));
+                        uploadedNames.push(targetPath);
+                        n++;
+                    }
+                }
+
+                out(`${n}` + tr('uploadComplete'), 'ok');
+
+                // Print uploaded file names directly so user sees the file list immediately
+                if (uploadedNames.length > 0) {
+                    out('');
+                    out('--- UPLOADED FILE LIST ---', 'cyan');
+                    uploadedNames.forEach(fn => out('  ' + fn.replace(/\//g, '\\').toUpperCase(), 'ok'));
+                    out('');
+                }
             }
 
             $('fz').onchange=e=>{ingest([...e.target.files]);e.target.value=''};
