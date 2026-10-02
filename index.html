@@ -428,7 +428,7 @@
                     TITLE: "TITLE - Sets window title.",
                     TREE: "TREE - Graphically displays directory structure.",
                     TYPE: "TYPE filename - Displays text file contents.",
-                    LOAD: "LOAD A-Z [-n] - Loads game from GitHub folder (a-z except c) and runs it.",
+                    LOAD: "LOAD A-Z [-v] - Loads files from a GitHub folder (a-z except c).",
                     UPLOAD: "UPLOAD [-f] - Uploads files or directory zip.",
                     VER: "VER - Displays DOS version.",
                     VERIFY: "VERIFY - Verifies file writing.",
@@ -522,7 +522,7 @@
                     TITLE: "TITLE - 창 제목을 설정합니다.",
                     TREE: "TREE - 디렉토리 구조를 그래픽으로 표시합니다.",
                     TYPE: "TYPE 파일명 - 텍스트 파일의 내용을 출력합니다.",
-                    LOAD: "LOAD A-Z [-n] - 깃허브 폴더(c 제외 a~z)의 게임을 불러와 실행합니다.",
+                    LOAD: "LOAD A-Z [-v] - 깃허브 폴더(c 제외 a~z)의 파일을 불러옵니다.",
                     UPLOAD: "UPLOAD [-f] - 파일 또는 폴더 zip 선택창을 엽니다.",
                     VER: "VER - WEB-DOS 버전을 표시합니다.",
                     VERIFY: "VERIFY - 파일 기록 검증 여부를 설정합니다.",
@@ -616,7 +616,7 @@
                     TITLE: "TITLE - ウィンドウタイトルを設定します。",
                     TREE: "TREE - ディレクトリ構造をグラフィカルに表示します。",
                     TYPE: "TYPE ファイル名 - テキストファイルの内容を表示します。",
-                    LOAD: "LOAD A-Z [-n] - GitHubフォルダ(cを除くa～z)のゲームを読み込んで実行します。",
+                    LOAD: "LOAD A-Z [-v] - GitHubフォルダ(cを除くa～z)のファイルを読み込みます。",
                     UPLOAD: "UPLOAD [-f] - ファイルまたはフォルダZIPをアップロードします。",
                     VER: "VER - WEB-DOSのバージョンを表示します。",
                     VERIFY: "VERIFY - ファイル書き込みの検証を設定します。",
@@ -710,7 +710,7 @@
                     TITLE: "TITLE - 设置命令提示符窗口的窗口标题。",
                     TREE: "TREE - 以图形方式显示驱动器或路径的目录结构。",
                     TYPE: "TYPE 文件名 - 显示文本文件的内容。",
-                    LOAD: "LOAD A-Z [-n] - 从 GitHub 文件夹(除 c 外的 a~z)加载并运行游戏。",
+                    LOAD: "LOAD A-Z [-v] - 从 GitHub 文件夹(除 c 外的 a~z)加载文件。",
                     UPLOAD: "UPLOAD [-f] - 打开文件或文件夹 zip 上传窗口。",
                     VER: "VER - 显示 WEB-DOS 版本。",
                     VERIFY: "VERIFY - 告诉系统是否验证文件已正确写入。",
@@ -1363,7 +1363,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
             // ================= LOAD : GitHub 폴더(a~z, c 제외)에서 게임 불러오기 =================
             const LM = {
                 en: {
-                    usage: 'Usage: LOAD A [-n] [-v]   (A-Z except C)',
+                    usage: 'Usage: LOAD A [-v]   (A-Z except C)',
                     reserved: 'Access is denied.',
                     local: 'The device is not ready.',
                     loading: d => 'Loading ' + d.toUpperCase() + '\\ ...',
@@ -1375,7 +1375,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                     pick: 'Multiple programs found. Use RUN with one of these:'
                 },
                 kr: {
-                    usage: '사용법: LOAD A [-n] [-v]   (C를 제외한 A~Z)',
+                    usage: '사용법: LOAD A [-v]   (C를 제외한 A~Z)',
                     reserved: '액세스가 거부되었습니다.',
                     local: '장치가 준비되지 않았습니다.',
                     loading: d => d.toUpperCase() + '\\ 불러오는 중...',
@@ -1387,7 +1387,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                     pick: '프로그램이 여러 개입니다. 아래 중 하나를 RUN 으로 실행하세요:'
                 },
                 jp: {
-                    usage: '使い方: LOAD A   (Cを除くA～Z / -n で実行せず読み込みのみ)',
+                    usage: '使い方: LOAD A [-v]   (Cを除くA～Z)',
                     reserved: 'アクセスが拒否されました。',
                     local: 'デバイスの準備ができていません。',
                     loading: d => d.toUpperCase() + '\\ を読み込み中...',
@@ -1399,7 +1399,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                     pick: 'プログラムが複数あります。次のいずれかを RUN で実行してください:'
                 },
                 cn: {
-                    usage: '用法: LOAD A   (除 C 外的 A~Z / 加 -n 只加载不运行)',
+                    usage: '用法: LOAD A [-v]   (除 C 外的 A~Z)',
                     reserved: '拒绝访问。',
                     local: '设备未准备好。',
                     loading: d => '正在加载 ' + d.toUpperCase() + '\\ ...',
@@ -1419,9 +1419,15 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
             const GH_REPO = '';
             let loading = false, ghErr = null, verbose = false;
             const dbg = m => { if (verbose) out('  ' + m, 'yellow'); };
+            const pageBase = () => {
+                let pth = location.pathname;
+                if (!pth.endsWith('/') && !/\.[a-z0-9]+$/i.test(pth.split('/').pop())) pth += '/';
+                return location.origin + pth.replace(/[^\/]*$/, '');
+            };
+            const U = x => pageBase() + x;
 
             const getter = (dir, rel) => async () => {
-                const r = await fetch(dir + '/' + encPath(rel));
+                const r = await fetch(U(dir + '/' + encPath(rel)));
                 dbg('GET ' + dir + '/' + rel + ' → ' + r.status);
                 if (!r.ok) throw new Error(rel + ' ' + r.status);
                 return new Uint8Array(await r.arrayBuffer());
@@ -1450,7 +1456,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
             // 1) <폴더>/files.json
             async function srcManifest(dir) {
                 try {
-                    const r = await fetch(dir + '/files.json', { cache: 'no-cache' });
+                    const r = await fetch(U(dir + '/files.json'), { cache: 'no-cache' });
                     dbg('GET ' + dir + '/files.json → ' + r.status);
                     if (!r.ok) return null;
                     const j = await r.json();
@@ -1463,7 +1469,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
             async function srcZipNames(dir, L) {
                 for (const nm of ['game.zip', 'game.jsdos', L + '.zip', L.toUpperCase() + '.zip', L + '.jsdos']) {
                     try {
-                        const r = await fetch(dir + '/' + encPath(nm), { cache: 'no-cache' });
+                        const r = await fetch(U(dir + '/' + encPath(nm)), { cache: 'no-cache' });
                         dbg('GET ' + dir + '/' + nm + ' → ' + r.status);
                         if (r.ok) return [{ path: nm, get: getter(dir, nm) }];
                     } catch (e) {}
@@ -1474,7 +1480,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
             // 3) 서버가 폴더 목록(디렉터리 인덱스)을 제공하는 경우 (로컬 서버 등)
             async function srcIndex(dir) {
                 try {
-                    const r = await fetch(dir + '/', { cache: 'no-cache' });
+                    const r = await fetch(U(dir + '/'), { cache: 'no-cache' });
                     dbg('GET ' + dir + '/ → ' + r.status);
                     if (!r.ok) return null;
                     const html = await r.text();
@@ -1502,10 +1508,13 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                     if (rest.length && isFile(rest[rest.length - 1])) rest.pop();
                     const prefix = rest.length ? rest.join('/') + '/' : '';
                     try {
-                        const url = 'https://api.github.com/repos/' + c.owner + '/' + c.repo + '/git/trees/HEAD?recursive=1';
-                        const r = await fetch(url);
-                        dbg('API ' + c.owner + '/' + c.repo + ' → ' + r.status);
-                        if (!r.ok) { ghErr = r.status; continue; }
+                        let r = null;
+                        for (const ref of ['HEAD', 'main', 'master']) {
+                            r = await fetch('https://api.github.com/repos/' + c.owner + '/' + c.repo + '/git/trees/' + ref + '?recursive=1');
+                            dbg('API ' + c.owner + '/' + c.repo + '@' + ref + ' → ' + r.status);
+                            if (r.ok) break;
+                        }
+                        if (!r || !r.ok) { ghErr = r && r.status; continue; }
                         const j = await r.json();
                         const want = (prefix + letter + '/').toLowerCase();
                         const hits = (j.tree || []).filter(t => t.type === 'blob' && t.path.toLowerCase().startsWith(want) && !skipName(t.path));
@@ -1519,7 +1528,6 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
             }
 
             cmds.load = async function (a) {
-                const noRun = a.some(x => /^[-\/]n$/i.test(x));
                 verbose = a.some(x => /^[-\/]v$/i.test(x));
                 const L = (a.find(x => !/^[-\/]/.test(x)) || '').replace(/[:\\\/]+$/, '').toLowerCase();
                 if (!L || !/^[a-z]$/.test(L)) return out(lm('usage'), 'err');
@@ -1529,6 +1537,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                 loading = true; ghErr = null;
                 try {
                     out(lm('loading', L), 'cyan');
+                    dbg('base: ' + pageBase());
                     let found = null;
                     for (const d of [L, L.toUpperCase()]) {            // 깃허브는 대소문자 구분 → 둘 다 시도
                         let list = (await srcManifest(d)) || (await srcZipNames(d, L)) || (await srcIndex(d));
@@ -1560,18 +1569,12 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                     };
                     await Promise.all(Array.from({ length: Math.min(6, total) }, worker));
                     if (bar) bar.remove();
-                    out(lm('done', total, (bytes / 1048576).toFixed(1), L), 'ok');
 
-                    let exes = list.map(it => L + '/' + it.path).filter(x => /\.(exe|com|bat)$/i.test(x));
-                    if (!exes.length) exes = list.map(it => L + '/' + it.path).filter(x => /\.(img|ima|vfd|iso|cue)$/i.test(x));
-                    if (!exes.length) return out(lm('noExe'), 'yellow');
-                    if (noRun || exes.length > 1) {
-                        if (exes.length > 1) out(lm('pick'), 'yellow');
-                        exes.forEach(x => out('  RUN ' + x.replace(/\//g, '\\').toUpperCase(), 'hi'));
-                        return;
-                    }
-                    out(tr('runningTo') + exes[0].replace(/\//g, '\\').toUpperCase());
-                    launch(files.get(exes[0].toLowerCase()).p);
+                    out(total + tr('uploadComplete'), 'ok');
+                    out('');
+                    out(tr('uploadedHeader'), 'cyan');
+                    list.forEach(it => out('  ' + (L + '/' + it.path).replace(/\//g, '\\').toUpperCase(), 'ok'));
+                    out('');
                 } catch (e) {
                     out('Error: ' + (e && e.message || e), 'err');
                 } finally { loading = false; }
