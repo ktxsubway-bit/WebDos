@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WEB-DOS [Version 1.02]</title>
+    <title>WEB-DOS [Version 1.06]</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         html, body { height: 100%; margin: 0; background: #000; }
@@ -36,7 +36,7 @@
         <div id="editor-header">WEB-DOS EDITOR</div>
         <textarea id="editor-textarea" spellcheck="false"></textarea>
         <div id="editor-footer">
-            <span>[Ctrl+S] Save & Exit | [ESC] Cancel</span>
+            <span id="editor-hint">[Ctrl+S] Save & Exit | [ESC] Cancel</span>
             <span id="editor-filename"></span>
         </div>
     </div>
@@ -57,7 +57,7 @@
                     workerLoad: "Worker: ",
                     jszipLoad: "JSZip: ",
                     dosLoad: "js-dos loaded OK (",
-                    verInfo: "WEB-DOS [Version 1.02]\n(c) RiceJamJam Studio. All rights reserved.",
+                    verInfo: "WEB-DOS [Version 1.06]\n(c) RiceJamJam Studio. All rights reserved.",
                     fmtDone: "All files have been formatted and deleted.",
                     reqParam: "Required parameter missing",
                     invDir: "Invalid directory",
@@ -86,7 +86,7 @@
                     zipFail: "Failed to unpack",
                     uploadComplete: " file(s) uploaded successfully.",
                     notCommand: " is not recognized as an internal or external command. Type HELP.",
-                    intro1: "WEB-DOS [Version 1.02]",
+                    intro1: "WEB-DOS [Version 1.06]",
                     intro2: "(c) RiceJamJam Studio. All rights reserved.",
                     langChanged: "Language changed to English.",
                     invalidLang: "Invalid language. Available: english (en), korean (kr/ko), japanese (jp/ja), chinese (cn/zh)",
@@ -95,7 +95,33 @@
                     jsRunning: "Executing JavaScript file: ",
                     jsSuccess: "JavaScript execution finished.",
                     jsError: "JavaScript Runtime Error: ",
-                    rootStripped: "[INFO] Top-level folder wrapper removed. Files unpacked directly into current directory."
+                    rootStripped: "[INFO] Top-level folder wrapper removed. Files unpacked directly into current directory.",
+                    subfolderHeader: "--- SUBFOLDER FILES (SUB-DIRECTORY CONTENTS) ---",
+                    uploadedHeader: "--- UPLOADED FILE LIST ---",
+                    editorTitle: "WEB-DOS EDITOR",
+                    editorHint: "[Ctrl+S] Save & Exit | [ESC] Cancel",
+                    exitBtn: "■ EXIT (ESC)",
+                    sysInfoOS: "OS Version:                1.06.437 Build 2026",
+                    sysInfoHost: "Host Name:                 WEB-DOS-PC",
+                    sysInfoType: "System Type:               x86/x64 Web Browser Environment",
+                    sysInfoMem: "Total Physical Memory:     640 KB Base / 32 MB Extended",
+                    memBase: "640K conventional memory free: 590 KB",
+                    memXMS: "Extended memory (XMS): 32,768 KB",
+                    memFiles: "Total virtual files stored: ",
+                    chkdskType: "The type of the file system is FAT32.",
+                    chkdskSerial: "Volume Serial Number is 437A-9F01",
+                    chkdskTotal: "32,768,000 bytes total disk space.",
+                    chkdskAvail: "32,000,000 bytes available on disk.",
+                    beepMsg: "BEEP!",
+                    colorGreen: "Color set to Terminal Green",
+                    colorCyan: "Color set to Neon Cyan",
+                    colorYellow: "Color set to Amber Gold",
+                    colorReset: "Color reset to default grey",
+                    noHelpFor: "No help topic available for command ",
+                    fileDeleted: "File deleted successfully.",
+                    fileRenamed: "File renamed.",
+                    dirRemoved: "Directory removed.",
+                    fileCopied: "        1 file(s) copied."
                 },
                 kr: {
                     helpHeader: "특정 명령어에 대한 자세한 내용이 필요하면 HELP 명령어 이름을 입력하십시오.",
@@ -103,7 +129,7 @@
                     workerLoad: "Worker: ",
                     jszipLoad: "JSZip: ",
                     dosLoad: "js-dos 로드 OK (",
-                    verInfo: "WEB-DOS [Version 1.02]\n(c) RiceJamJam Studio. All rights reserved.",
+                    verInfo: "WEB-DOS [Version 1.06]\n(c) RiceJamJam Studio. All rights reserved.",
                     fmtDone: "모든 파일이 삭제되었습니다.",
                     reqParam: "필수 인자가 누락되었습니다",
                     invDir: "유효하지 않은 폴더입니다",
@@ -132,7 +158,7 @@
                     zipFail: "압축 해제 실패",
                     uploadComplete: "개 파일 업로드 완료.",
                     notCommand: "은(는) 내부/외부 명령이 아닙니다. HELP 를 입력하세요.",
-                    intro1: "WEB-DOS [Version 1.02]",
+                    intro1: "WEB-DOS [Version 1.06]",
                     intro2: "(c) RiceJamJam Studio. All rights reserved.",
                     langChanged: "언어가 한국어로 변경되었습니다.",
                     invalidLang: "지원하지 않는 언어입니다. 사용 가능: english(en), korean(kr/ko), japanese(jp/ja), chinese(cn/zh)",
@@ -141,7 +167,33 @@
                     jsRunning: "자바스크립트 파일 실행 중: ",
                     jsSuccess: "자바스크립트 실행이 완료되었습니다.",
                     jsError: "자바스크립트 런타임 오류: ",
-                    rootStripped: "[안내] 최상위 폴더 감싸기가 감지되어 내부 파일들이 최상위 경로로 자동 배치되었습니다."
+                    rootStripped: "[안내] 최상위 폴더 감싸기가 감지되어 내부 파일들이 최상위 경로로 자동 배치되었습니다.",
+                    subfolderHeader: "--- 하위 폴더 파일 목록 ---",
+                    uploadedHeader: "--- 업로드된 파일 목록 ---",
+                    editorTitle: "WEB-DOS 에디터",
+                    editorHint: "[Ctrl+S] 저장 및 종료 | [ESC] 취소",
+                    exitBtn: "■ 종료 (ESC)",
+                    sysInfoOS: "OS 버전:                   1.06.437 Build 2026",
+                    sysInfoHost: "호스트 이름:               WEB-DOS-PC",
+                    sysInfoType: "시스템 종류:               x86/x64 웹 브라우저 가상 환경",
+                    sysInfoMem: "총 물리 메모리:           640 KB 기본 / 32 MB 확장",
+                    memBase: "640K 기본 메모리 여유: 590 KB",
+                    memXMS: "확장 메모리 (XMS): 32,768 KB",
+                    memFiles: "저장된 총 가상 파일 수: ",
+                    chkdskType: "파일 시스템 유형은 FAT32 입니다.",
+                    chkdskSerial: "볼륨 일련 번호: 437A-9F01",
+                    chkdskTotal: "총 디스크 공간 32,768,000 바이트.",
+                    chkdskAvail: "디스크 사용 가능 공간 32,000,000 바이트.",
+                    beepMsg: "삐~ (BEEP!)",
+                    colorGreen: "색상이 터미널 그린으로 변경되었습니다",
+                    colorCyan: "색상이 네온 사이언으로 변경되었습니다",
+                    colorYellow: "색상이 엠버 골드로 변경되었습니다",
+                    colorReset: "색상이 기본 회색으로 초기화되었습니다",
+                    noHelpFor: "다음 명령어에 대한 도움말 정보가 없습니다: ",
+                    fileDeleted: "파일이 성공적으로 삭제되었습니다.",
+                    fileRenamed: "파일 이름이 변경되었습니다.",
+                    dirRemoved: "디렉토리가 삭제되었습니다.",
+                    fileCopied: "        1개 파일이 복사되었습니다."
                 },
                 jp: {
                     helpHeader: "特定のコマンドに関する詳細情報が必要な場合は、HELP コマンド名 を入力してください。",
@@ -149,7 +201,7 @@
                     workerLoad: "Worker: ",
                     jszipLoad: "JSZip: ",
                     dosLoad: "js-dos読み込みOK (",
-                    verInfo: "WEB-DOS [Version 1.02]\n(c) RiceJamJam Studio. All rights reserved.",
+                    verInfo: "WEB-DOS [Version 1.06]\n(c) RiceJamJam Studio. All rights reserved.",
                     fmtDone: "すべてのファイルが削除されました。",
                     reqParam: "必須パラメータがありません",
                     invDir: "無効なディレクトリです",
@@ -178,7 +230,7 @@
                     zipFail: "解凍に失敗しました",
                     uploadComplete: "個のファイルのアップロードが完了しました。",
                     notCommand: " は内部コマンドまたは外部コマンドとして認識されていません。",
-                    intro1: "WEB-DOS [Version 1.02]",
+                    intro1: "WEB-DOS [Version 1.06]",
                     intro2: "(c) RiceJamJam Studio. All rights reserved.",
                     langChanged: "言語を日本語に変更しました。",
                     invalidLang: "無効な言語です。設定可能: english(en), korean(kr/ko), japanese(jp/ja), chinese(cn/zh)",
@@ -187,7 +239,33 @@
                     jsRunning: "JavaScriptファイルを実行中: ",
                     jsSuccess: "JavaScriptの実行が完了しました。",
                     jsError: "JavaScript実行エラー: ",
-                    rootStripped: "[情報] 最上位フォルダの階層を自動解除し、ファイルを直接展開しました。"
+                    rootStripped: "[情報] 最上位フォルダの階層を自動解除し、ファイルを直接展開しました。",
+                    subfolderHeader: "--- サブフォルダファイル一覧 ---",
+                    uploadedHeader: "--- アップロード済みファイル一覧 ---",
+                    editorTitle: "WEB-DOS エディタ",
+                    editorHint: "[Ctrl+S] 保存して終了 | [ESC] キャンセル",
+                    exitBtn: "■ 終了 (ESC)",
+                    sysInfoOS: "OSバージョン:               1.06.437 Build 2026",
+                    sysInfoHost: "ホスト名:                   WEB-DOS-PC",
+                    sysInfoType: "システムの種類:             x86/x64 ブラウザ仮想環境",
+                    sysInfoMem: "全物理メモリ:               640 KB 基本 / 32 MB 拡張",
+                    memBase: "640K 基本メモリ空き容量: 590 KB",
+                    memXMS: "拡張メモリ (XMS): 32,768 KB",
+                    memFiles: "保存済み仮想ファイル総数: ",
+                    chkdskType: "ファイルシステムのタイプは FAT32 です。",
+                    chkdskSerial: "ボリュームシリアル番号: 437A-9F01",
+                    chkdskTotal: "全ディスク容量 32,768,000 バイト。",
+                    chkdskAvail: "利用可能ディスク容量 32,000,000 バイト。",
+                    beepMsg: "ビープ音 (BEEP!)",
+                    colorGreen: "カラーをターミナルグリーンに設定しました",
+                    colorCyan: "カラーをネオンシアンに設定しました",
+                    colorYellow: "カラーをアンバーゴールドに設定しました",
+                    colorReset: "カラーをデフォルトグレーにリセットしました",
+                    noHelpFor: "ヘルプが見つかりません: ",
+                    fileDeleted: "ファイルは正常に削除されました。",
+                    fileRenamed: "ファイル名を変更しました。",
+                    dirRemoved: "ディレクトリを削除しました。",
+                    fileCopied: "        1 個のファイルをコピーしました。"
                 },
                 cn: {
                     helpHeader: "有关某个命令的详细信息，请键入 HELP 命令名。",
@@ -195,7 +273,7 @@
                     workerLoad: "Worker: ",
                     jszipLoad: "JSZip: ",
                     dosLoad: "js-dos 加载成功 (",
-                    verInfo: "WEB-DOS [Version 1.02]\n(c) RiceJamJam Studio. All rights reserved.",
+                    verInfo: "WEB-DOS [Version 1.06]\n(c) RiceJamJam Studio. All rights reserved.",
                     fmtDone: "所有文件已被删除。",
                     reqParam: "缺少必要参数",
                     invDir: "无效的目录",
@@ -224,7 +302,7 @@
                     zipFail: "解压失败",
                     uploadComplete: " 个文件上传完成。",
                     notCommand: " 不是内部或外部命令，也不是可运行的程序。请输入 HELP。",
-                    intro1: "WEB-DOS [Version 1.02]",
+                    intro1: "WEB-DOS [Version 1.06]",
                     intro2: "(c) RiceJamJam Studio. All rights reserved.",
                     langChanged: "语言已切换为中文。",
                     invalidLang: "无效的语言。可用语言: english (en), korean (kr/ko), japanese (jp/ja), chinese (cn/zh)",
@@ -233,106 +311,422 @@
                     jsRunning: "正在执行 JavaScript 文件: ",
                     jsSuccess: "JavaScript 执行完成。",
                     jsError: "JavaScript 运行时错误: ",
-                    rootStripped: "[提示] 已自动移除最外层文件夹，文件已直接解压至当前目录。"
+                    rootStripped: "[提示] 已自动移除最外层文件夹，文件已直接解压至当前目录。",
+                    subfolderHeader: "--- 子文件夹文件列表 ---",
+                    uploadedHeader: "--- 已上传文件列表 ---",
+                    editorTitle: "WEB-DOS 编辑器",
+                    editorHint: "[Ctrl+S] 保存并退出 | [ESC] 取消",
+                    exitBtn: "■ 退出 (ESC)",
+                    sysInfoOS: "OS 版本:                    1.06.437 Build 2026",
+                    sysInfoHost: "主机名:                    WEB-DOS-PC",
+                    sysInfoType: "系统类型:                  x86/x64 浏览器虚拟环境",
+                    sysInfoMem: "物理内存总量:              640 KB 基本 / 32 MB 扩展",
+                    memBase: "640K 基本内存可用: 590 KB",
+                    memXMS: "扩展内存 (XMS): 32,768 KB",
+                    memFiles: "存储的虚拟文件总数: ",
+                    chkdskType: "文件系统类型是 FAT32。",
+                    chkdskSerial: "卷序列号是 437A-9F01",
+                    chkdskTotal: "32,768,000 字节总磁盘空间。",
+                    chkdskAvail: "32,000,000 字节可用磁盘空间。",
+                    beepMsg: "蜂鸣! (BEEP!)",
+                    colorGreen: "颜色已设置为终端绿",
+                    colorCyan: "颜色已设置为霓虹青",
+                    colorYellow: "颜色已设置为琥珀金",
+                    colorReset: "颜色已重置为默认灰",
+                    noHelpFor: "未找到相关帮助主题: ",
+                    fileDeleted: "文件已成功删除。",
+                    fileRenamed: "文件名已重命名。",
+                    dirRemoved: "目录已成功删除。",
+                    fileCopied: "        已复制 1 个文件。"
                 }
             };
 
             const helpDocs = {
-                ASSOC: "ASSOC [ .ext[=[fileType]] ] - Displays or modifies file extension associations.",
-                ATTRIB: "ATTRIB [+R|-R] [+A|-A] [+S|-S] [+H|-H] [filename] - Displays or changes file attributes.",
-                BEEP: "BEEP - Plays a retro DOS PC speaker sound effect.",
-                BREAK: "BREAK [ON|OFF] - Sets or clears extended CTRL+C checking on DOS system.",
-                BCDEDIT: "BCDEDIT - Sets properties in boot database to control boot loading.",
-                CACLS: "CACLS filename [/T] [/E] [/C] [/G user:perm] - Displays or modifies ACLs of files.",
-                CALL: "CALL [drive:][path]filename [batch-parameters] - Calls one batch program from another.",
-                CD: "CD [drive:][path] - Displays the name of or changes the current directory.",
-                CHCP: "CHCP [nnn] - Displays or sets the active code page number.",
-                CHDIR: "CHDIR [drive:][path] - Displays the name of or changes the current directory.",
-                CHKDSK: "CHKDSK [drive:] - Checks a disk and displays a status report.",
-                CHKNTFS: "CHKNTFS [drive:] - Displays or modifies the checking of disk at boot time.",
-                CLS: "CLS - Clears the screen.",
-                CMD: "CMD - Starts a new instance of the Windows command interpreter.",
-                COLOR: "COLOR [attr] - Sets the default console foreground and background colors. (e.g. COLOR 0A)",
-                COMP: "COMP [data1] [data2] - Compares the contents of two files or sets of files.",
-                COMPACT: "COMPACT [/C | /U] [filename] - Displays or alters the compression of files.",
-                CONFIG: "CONFIG [en|kr|jp|cn] - Configures language settings.",
-                CONVERT: "CONVERT drive: /FS:NTFS - Converts FAT volumes to NTFS.",
-                COPY: "COPY source destination - Copies one or more files to another location.",
-                DATE: "DATE - Displays or sets the date.",
-                DEL: "DEL [/F] [/Q] filename - Deletes one or more files.",
-                DIR: "DIR [drive:][path] - Displays a list of files and subdirectories in a directory.",
-                DISKPART: "DISKPART - Displays or configures Disk Partition properties.",
-                DOCTOR: "DOCTOR - Runs diagnostic check for js-dos emulator and environment.",
-                DOSKEY: "DOSKEY - Edits command lines, recalls Windows commands, and creates macros.",
-                DRIVERQUERY: "DRIVERQUERY - Displays current device driver status and properties.",
-                ECHO: "ECHO [ON | OFF] | ECHO [message] - Displays messages or turns command-echoing on or off.",
-                EDIT: "EDIT filename.txt - Opens full-screen retro text editor.",
-                ENDLOCAL: "ENDLOCAL - Ends localization of environment changes in a batch file.",
-                ERASE: "ERASE filename - Deletes one or more files.",
-                EXIT: "EXIT - Quits the CMD.EXE program (command interpreter) or ends game session.",
-                FC: "FC [/N] [/LBn] file1 file2 - Compares two files and displays differences.",
-                FIND: "FIND \"string\" filename - Searches for a text string in a file.",
-                FINDSTR: "FINDSTR \"string\" filename - Searches for strings in files.",
-                FOR: "FOR %variable IN (set) DO command - Runs a specified command for each file in a set.",
-                FORMAT: "FORMAT - Formats a disk for use with Windows/DOS.",
-                FSUTIL: "FSUTIL - Displays or configures file system properties.",
-                FTYPE: "FTYPE [fileType[=[openCommandString]]] - Displays or modifies file types used in extension associations.",
-                GOTO: "GOTO label - Directs CMD interpreter to a labeled line in a batch program.",
-                GPRESULT: "GPRESULT - Displays Group Policy information for machine or user.",
-                HELP: "HELP [command] - Provides Help information for Windows commands.",
-                ICACLS: "ICACLS name [/grant user:perm] - Display, modify, backup, or restore ACLs.",
-                IF: "IF [NOT] ERRORLEVEL number command - Performs conditional processing in batch programs.",
-                JAVASCRIPT: "JAVASCRIPT filename.js (or JS) - Executes uploaded JavaScript file and redirects output.",
-                LABEL: "LABEL [drive:][label] - Creates, changes, or deletes the volume label of a disk.",
-                MD: "MD path - Creates a directory.",
-                MEM: "MEM - Displays memory usage and virtual drive storage status.",
-                MKDIR: "MKDIR path - Creates a directory.",
-                MKLINK: "MKLINK [[/D] | [/H] | [/J]] Link Target - Creates a symbolic link or hard link.",
-                MODE: "MODE [COMn: ...] - Configures system devices.",
-                MORE: "MORE filename - Displays output one screen at a time.",
-                MOVE: "MOVE source destination - Moves one or more files from one directory to another.",
-                OPENFILES: "OPENFILES - Displays files opened by remote users on a file share.",
-                PATH: "PATH [[drive:]path[;...]] - Displays or sets a search path for executable files.",
-                PAUSE: "PAUSE - Suspends processing of a batch file and prompts the user.",
-                POPD: "POPD - Restores the previous value of the current directory saved by PUSHD.",
-                PRINT: "PRINT filename - Prints a text file.",
-                PROMPT: "PROMPT [text] - Changes the Windows command prompt.",
-                PUSHD: "PUSHD [path] - Stores current directory then changes to specified path.",
-                RD: "RD path - Removes a directory.",
-                RECOVER: "RECOVER [drive:][path]filename - Recovers readable information from a bad or defective disk.",
-                REM: "REM [comment] - Records comments in batch files or CONFIG.SYS.",
-                REN: "REN oldname newname - Renames a file or files.",
-                RENAME: "RENAME oldname newname - Renames a file or files.",
-                REPLACE: "REPLACE source_path dest_path - Replaces files.",
-                RMDIR: "RMDIR path - Removes a directory.",
-                ROBOCOPY: "ROBOCOPY source destination [file ...] - Advanced utility to copy files and directory trees.",
-                RUN: "RUN filename.exe - Executes DOS programs (.EXE, .COM, .BAT) in js-dos.",
-                SET: "SET [variable=[string]] - Displays, sets, or removes environment variables.",
-                SETLOCAL: "SETLOCAL - Begins localization of environment changes in a batch file.",
-                SC: "SC - Displays or configures services (background processes).",
-                SCHTASKS: "SCHTASKS - Schedules commands and programs to run on a computer.",
-                SHIFT: "SHIFT - Changes the position of replaceable parameters in batch files.",
-                SHUTDOWN: "SHUTDOWN [/s | /r | /a] - Allows local or remote shutdown of machine.",
-                SORT: "SORT [/R] [filename] - Sorts input.",
-                START: "START [title] program - Starts a separate window to run a specified program or command.",
-                SUBST: "SUBST [drive1: [drive2:]path] - Associates a path with a drive letter.",
-                SYSTEMINFO: "SYSTEMINFO - Displays machine-specific properties and configuration.",
-                TASKLIST: "TASKLIST - Displays all currently running tasks including services.",
-                TASKKILL: "TASKKILL /PID processid | /IM imagename - Kills running processes.",
-                TIME: "TIME - Displays or sets the system time.",
-                TITLE: "TITLE [string] - Sets the window title for CMD.EXE session.",
-                TREE: "TREE [path] - Graphically displays the directory structure of a drive or path.",
-                TYPE: "TYPE filename - Displays the contents of a text file.",
-                UPLOAD: "UPLOAD [-f] - Opens file or directory dialog picker to load files into DOS.",
-                VER: "VER - Displays Windows/DOS version.",
-                VERIFY: "VERIFY [ON | OFF] - Tells whether to verify that files are written correctly.",
-                VOL: "VOL [drive:] - Displays a disk volume label and serial number.",
-                XCOPY: "XCOPY source [destination] - Copies files and directory trees.",
-                WMIC: "WMIC - Displays WMI information inside interactive command shell."
+                en: {
+                    ASSOC: "ASSOC - Displays file extension associations.",
+                    ATTRIB: "ATTRIB - Displays or changes file attributes.",
+                    BEEP: "BEEP - Plays retro PC speaker sound effect.",
+                    BREAK: "BREAK - Sets extended CTRL+C checking.",
+                    BCDEDIT: "BCDEDIT - Boot Data Store settings.",
+                    CACLS: "CACLS - Displays or modifies file ACLs.",
+                    CALL: "CALL - Calls one batch program from another.",
+                    CD: "CD - Displays current directory or changes directory.",
+                    CHCP: "CHCP - Displays or sets active code page.",
+                    CHDIR: "CHDIR - Displays current directory or changes directory.",
+                    CHKDSK: "CHKDSK - Checks disk status report.",
+                    CHKNTFS: "CHKNTFS - Displays disk check on boot.",
+                    CLS: "CLS - Clears terminal screen.",
+                    CMD: "CMD - Starts a new command shell.",
+                    COLOR: "COLOR [0A|0B|0E] - Changes terminal text color.",
+                    COMP: "COMP - Compares contents of two files.",
+                    COMPACT: "COMPACT - Displays or alters file compression.",
+                    CONFIG: "CONFIG [en|kr|jp|cn] - Changes system language setting.",
+                    CONVERT: "CONVERT - Converts FAT volumes to NTFS.",
+                    COPY: "COPY source dest - Copies files.",
+                    DATE: "DATE - Displays system date.",
+                    DEL: "DEL filename - Deletes one or more files.",
+                    DIR: "DIR - Displays directory files and subfolders.",
+                    DISKPART: "DISKPART - Configures disk partition properties.",
+                    DOCTOR: "DOCTOR - Runs diagnostic check on js-dos.",
+                    DOSKEY: "DOSKEY - Command history and macro manager.",
+                    DRIVERQUERY: "DRIVERQUERY - Displays device driver status.",
+                    ECHO: "ECHO [text] - Displays messages.",
+                    EDIT: "EDIT filename.txt - Opens retro text editor.",
+                    ENDLOCAL: "ENDLOCAL - Ends localization in batch file.",
+                    ERASE: "ERASE - Deletes files.",
+                    EXIT: "EXIT - Quits command session or game.",
+                    FC: "FC - Compares two files.",
+                    FIND: "FIND \"string\" filename - Searches string in file.",
+                    FINDSTR: "FINDSTR - Searches strings in files.",
+                    FOR: "FOR - Runs specified command for set of files.",
+                    FORMAT: "FORMAT - Formats virtual disk.",
+                    FSUTIL: "FSUTIL - File system management utility.",
+                    FTYPE: "FTYPE - Displays or modifies file types.",
+                    GOTO: "GOTO - Directs batch file execution.",
+                    GPRESULT: "GPRESULT - Displays Group Policy info.",
+                    HELP: "HELP [command] - Provides Help info.",
+                    ICACLS: "ICACLS - Manages file permissions.",
+                    IF: "IF - Performs conditional processing.",
+                    JAVASCRIPT: "JAVASCRIPT filename.js (JS) - Runs JS file.",
+                    LABEL: "LABEL - Creates or edits disk volume label.",
+                    MD: "MD path - Creates directory.",
+                    MEM: "MEM - Displays memory and virtual file status.",
+                    MKDIR: "MKDIR path - Creates directory.",
+                    MKLINK: "MKLINK - Creates symbolic links.",
+                    MODE: "MODE - Configures system devices.",
+                    MORE: "MORE - Displays output page by page.",
+                    MOVE: "MOVE source dest - Moves files.",
+                    OPENFILES: "OPENFILES - Displays opened shared files.",
+                    PATH: "PATH - Sets executable search path.",
+                    PAUSE: "PAUSE - Pauses batch processing.",
+                    POPD: "POPD - Restores directory from stack.",
+                    PRINT: "PRINT - Prints text file.",
+                    PROMPT: "PROMPT - Changes command prompt format.",
+                    PUSHD: "PUSHD - Stores directory and changes path.",
+                    RD: "RD path - Removes directory.",
+                    RECOVER: "RECOVER - Recovers readable data.",
+                    REM: "REM - Records comment in batch file.",
+                    REN: "REN old new - Renames file.",
+                    RENAME: "RENAME old new - Renames file.",
+                    REPLACE: "REPLACE - Replaces files.",
+                    RMDIR: "RMDIR path - Removes directory.",
+                    ROBOCOPY: "ROBOCOPY - Robust file copying tool.",
+                    RUN: "RUN filename.exe - Executes DOS application.",
+                    SET: "SET [var=val] - Manages environment variables.",
+                    SETLOCAL: "SETLOCAL - Begins environment localization.",
+                    SC: "SC - Service Controller utility.",
+                    SCHTASKS: "SCHTASKS - Schedules tasks.",
+                    SHIFT: "SHIFT - Shifts replaceable batch parameters.",
+                    SHUTDOWN: "SHUTDOWN - System shutdown.",
+                    SORT: "SORT - Sorts input data.",
+                    START: "START - Runs program in window.",
+                    SUBST: "SUBST - Associates path with drive letter.",
+                    SYSTEMINFO: "SYSTEMINFO - Displays machine specifications.",
+                    TASKLIST: "TASKLIST - Displays running processes.",
+                    TASKKILL: "TASKKILL - Kills process.",
+                    TIME: "TIME - Displays system time.",
+                    TITLE: "TITLE - Sets window title.",
+                    TREE: "TREE - Graphically displays directory structure.",
+                    TYPE: "TYPE filename - Displays text file contents.",
+                    UPLOAD: "UPLOAD [-f] - Uploads files or directory zip.",
+                    VER: "VER - Displays DOS version.",
+                    VERIFY: "VERIFY - Verifies file writing.",
+                    VOL: "VOL - Displays volume label.",
+                    XCOPY: "XCOPY - Extended file copy.",
+                    WMIC: "WMIC - Windows Management Console."
+                },
+                kr: {
+                    ASSOC: "ASSOC - 파일 확장명 연결을 표시합니다.",
+                    ATTRIB: "ATTRIB - 파일 속성을 표시하거나 변경합니다.",
+                    BEEP: "BEEP - 레트로 PC 스피커 비프음을 재생합니다.",
+                    BREAK: "BREAK - 확장된 CTRL+C 검사를 설정합니다.",
+                    BCDEDIT: "BCDEDIT - 부팅 데이터베이스 속성을 설정합니다.",
+                    CACLS: "CACLS - 파일의 액세스 제어 목록(ACL)을 수정합니다.",
+                    CALL: "CALL - 배치 프로그램에서 다른 배치 프로그램을 호출합니다.",
+                    CD: "CD - 현재 디렉토리 이름을 표시하거나 변경합니다.",
+                    CHCP: "CHCP - 활성 코드 페이지 번호를 표시하거나 설정합니다.",
+                    CHDIR: "CHDIR - 디렉토리를 변경합니다.",
+                    CHKDSK: "CHKDSK - 디스크 상태 보고서를 출력합니다.",
+                    CHKNTFS: "CHKNTFS - 부팅 시 디스크 검사 여부를 확인합니다.",
+                    CLS: "CLS - 터미널 화면을 지웁니다.",
+                    CMD: "CMD - DOS 명령 프롬프트의 새 인스턴스를 시작합니다.",
+                    COLOR: "COLOR [0A|0B|0E] - 터미널 텍스트 색상을 변경합니다.",
+                    COMP: "COMP - 두 파일의 내용을 비교합니다.",
+                    COMPACT: "COMPACT - 파일 압축 상태를 표시하거나 변경합니다.",
+                    CONFIG: "CONFIG [en|kr|jp|cn] - 시스템 언어 설정을 변경합니다.",
+                    CONVERT: "CONVERT - FAT 볼륨을 NTFS로 변환합니다.",
+                    COPY: "COPY 원본 대상 - 하나 이상의 파일을 복사합니다.",
+                    DATE: "DATE - 시스템 날짜를 표시합니다.",
+                    DEL: "DEL 파일명 - 하나 이상의 파일을 삭제합니다.",
+                    DIR: "DIR - 디렉토리의 파일과 하위 폴더 목록을 표시합니다.",
+                    DISKPART: "DISKPART - 디스크 파티션 속성을 구성합니다.",
+                    DOCTOR: "DOCTOR - js-dos 에뮬레이터 환경 진단을 실행합니다.",
+                    DOSKEY: "DOSKEY - 명령줄 편집 및 매크로 기능을 제공합니다.",
+                    DRIVERQUERY: "DRIVERQUERY - 현재 장치 드라이버 상태를 표시합니다.",
+                    ECHO: "ECHO [메시지] - 메시지를 화면에 출력합니다.",
+                    EDIT: "EDIT 파일명.txt - 전체 화면 레트로 텍스트 에디터를 열어 편집합니다.",
+                    ENDLOCAL: "ENDLOCAL - 배치 파일의 환경 변경 지역화를 끝냅니다.",
+                    ERASE: "ERASE - 파일을 삭제합니다.",
+                    EXIT: "EXIT - 명령 프롬프트를 종료하거나 실행 중인 게임을 끕니다.",
+                    FC: "FC - 두 파일의 차이점을 비교합니다.",
+                    FIND: "FIND \"문자열\" 파일명 - 파일에서 텍스트 문자열을 찾습니다.",
+                    FINDSTR: "FINDSTR - 파일에서 문자열을 검색합니다.",
+                    FOR: "FOR - 파일 집합의 각 파일에 대해 지정된 명령을 실행합니다.",
+                    FORMAT: "FORMAT - 가상 디스크를 포맷합니다.",
+                    FSUTIL: "FSUTIL - 파일 시스템 관리 유틸리티입니다.",
+                    FTYPE: "FTYPE - 파일 연결 종류를 표시하거나 수정합니다.",
+                    GOTO: "GOTO - 배치 파일에서 레이블이 지정된 줄로 이동합니다.",
+                    GPRESULT: "GPRESULT - 그룹 정책 정보를 표시합니다.",
+                    HELP: "HELP [명령어] - DOS 명령어 도움말을 제공합니다.",
+                    ICACLS: "ICACLS - 파일 권한을 관리합니다.",
+                    IF: "IF - 배치 프로그램에서 조건부 처리를 수행합니다.",
+                    JAVASCRIPT: "JAVASCRIPT 파일명.js (JS) - 업로드된 자바스크립트 파일을 실행합니다.",
+                    LABEL: "LABEL - 디스크의 볼륨 라벨을 작성 또는 변경합니다.",
+                    MD: "MD 경로 - 새 디렉토리를 만듭니다.",
+                    MEM: "MEM - 메모리 및 가상 파일 저장소 상태를 표시합니다.",
+                    MKDIR: "MKDIR 경로 - 새 디렉토리를 만듭니다.",
+                    MKLINK: "MKLINK - 심볼릭 링크를 생성합니다.",
+                    MODE: "MODE - 시스템 장치를 구성합니다.",
+                    MORE: "MORE - 출력을 한 화면씩 나누어 표시합니다.",
+                    MOVE: "MOVE 원본 대상 - 파일을 이동합니다.",
+                    OPENFILES: "OPENFILES - 공유 열린 파일 목록을 표시합니다.",
+                    PATH: "PATH - 실행 파일의 검색 경로를 설정합니다.",
+                    PAUSE: "PAUSE - 배치 파일 처리를 일시 정지합니다.",
+                    POPD: "POPD - PUSHD로 저장된 이전 디렉토리로 이동합니다.",
+                    PRINT: "PRINT - 텍스트 파일을 인쇄 스풀로 보냅니다.",
+                    PROMPT: "PROMPT - 명령어 프롬프트 모양을 변경합니다.",
+                    PUSHD: "PUSHD - 현재 디렉토리를 저장하고 지정된 경로로 이동합니다.",
+                    RD: "RD 경로 - 디렉토리를 제거합니다.",
+                    RECOVER: "RECOVER - 손상된 디스크에서 읽기 가능한 정보를 복구합니다.",
+                    REM: "REM - 주석을 기록합니다.",
+                    REN: "REN 이전이름 새이름 - 파일 이름을 변경합니다.",
+                    RENAME: "RENAME 이전이름 새이름 - 파일 이름을 변경합니다.",
+                    REPLACE: "REPLACE - 파일을 바꿉니다.",
+                    RMDIR: "RMDIR 경로 - 디렉토리를 제거합니다.",
+                    ROBOCOPY: "ROBOCOPY - 고급 파일 및 폴더 복사 유틸리티입니다.",
+                    RUN: "RUN 파일명.exe - DOS 프로그램(.EXE, .COM, .BAT)을 실행합니다.",
+                    SET: "SET [변수=값] - 환경 변수를 표시하거나 설정합니다.",
+                    SETLOCAL: "SETLOCAL - 배치 파일의 환경 변경 지역화를 시작합니다.",
+                    SC: "SC - 서비스 제어 유틸리티입니다.",
+                    SCHTASKS: "SCHTASKS - 예약된 작업을 관리합니다.",
+                    SHIFT: "SHIFT - 배치 파일의 매개변수 위치를 바꿉니다.",
+                    SHUTDOWN: "SHUTDOWN - 시스템을 종료합니다.",
+                    SORT: "SORT - 입력 데이터를 정렬합니다.",
+                    START: "START - 별도의 창에서 프로그램을 실행합니다.",
+                    SUBST: "SUBST - 경로를 드라이브 문자와 연결합니다.",
+                    SYSTEMINFO: "SYSTEMINFO - 시스템 사양 및 환경 정보를 표시합니다.",
+                    TASKLIST: "TASKLIST - 실행 중인 모든 프로세스 목록을 출력합니다.",
+                    TASKKILL: "TASKKILL - 프로세스를 종료합니다.",
+                    TIME: "TIME - 시스템 시간을 표시합니다.",
+                    TITLE: "TITLE - 창 제목을 설정합니다.",
+                    TREE: "TREE - 디렉토리 구조를 그래픽으로 표시합니다.",
+                    TYPE: "TYPE 파일명 - 텍스트 파일의 내용을 출력합니다.",
+                    UPLOAD: "UPLOAD [-f] - 파일 또는 폴더 zip 선택창을 엽니다.",
+                    VER: "VER - WEB-DOS 버전을 표시합니다.",
+                    VERIFY: "VERIFY - 파일 기록 검증 여부를 설정합니다.",
+                    VOL: "VOL - 디스크 볼륨 라벨을 표시합니다.",
+                    XCOPY: "XCOPY - 파일 및 디렉토리 트리를 복사합니다.",
+                    WMIC: "WMIC - WMI 가상 콘솔을 시작합니다."
+                },
+                jp: {
+                    ASSOC: "ASSOC - ファイル拡張子の関連付けを表示します。",
+                    ATTRIB: "ATTRIB - ファイル属性を表示または変更します。",
+                    BEEP: "BEEP - レトロPCスピーカーのビープ音を再生します。",
+                    BREAK: "BREAK - 拡張CTRL+Cチェックを設定します。",
+                    BCDEDIT: "BCDEDIT - ブート設定データを管理します。",
+                    CACLS: "CACLS - ファイルのアクセス制御リスト(ACL)を変更します。",
+                    CALL: "CALL - バッチプログラムから別のバッチを呼び出します。",
+                    CD: "CD - 現在のディレクトリを表示または変更します。",
+                    CHCP: "CHCP - アクティブなコードページ番号を設定します。",
+                    CHDIR: "CHDIR - ディレクトリを変更します。",
+                    CHKDSK: "CHKDSK - ディスク状態レポートを表示します。",
+                    CHKNTFS: "CHKNTFS - 起動時のディスクチェックを表示します。",
+                    CLS: "CLS - 画面を消去します。",
+                    CMD: "CMD - Windowsコマンドプロンプトを開始します。",
+                    COLOR: "COLOR [0A|0B|0E] - コンソール文字色を変更します。",
+                    COMP: "COMP - 2つのファイルの内容を比較します。",
+                    COMPACT: "COMPACT - ファイルの圧縮状態を表示/変更します。",
+                    CONFIG: "CONFIG [en|kr|jp|cn] - システム言語を設定します。",
+                    CONVERT: "CONVERT - FATドライブをNTFSに変換します。",
+                    COPY: "COPY コピー元 コピー先 - ファイルをコピーします。",
+                    DATE: "DATE - システム日付を表示します。",
+                    DEL: "DEL ファイル名 - ファイルを削除します。",
+                    DIR: "DIR - ディレクトリ内のファイルとフォルダを表示します。",
+                    DISKPART: "DISKPART - ディスクパーティションのプロパティを構成します。",
+                    DOCTOR: "DOCTOR - js-dosエミュレータの診断を実行します。",
+                    DOSKEY: "DOSKEY - コマンド履歴の再呼び出しやマクロを作成します。",
+                    DRIVERQUERY: "DRIVERQUERY - デバイスドライバの状態を表示します。",
+                    ECHO: "ECHO [テキスト] - メッセージを表示します。",
+                    EDIT: "EDIT ファイル名.txt - テキストエディタを開きます。",
+                    ENDLOCAL: "ENDLOCAL - バッチファイルの環境変更のローカライズを終了します。",
+                    ERASE: "ERASE - ファイルを削除します。",
+                    EXIT: "EXIT - セッションまたはゲームを終了します。",
+                    FC: "FC - 2つのファイルを比較します。",
+                    FIND: "FIND \"文字列\" ファイル名 - 文字列を検索します。",
+                    FINDSTR: "FINDSTR - ファイル内の文字列を検索します。",
+                    FOR: "FOR - ファイルセットの各ファイルに対してコマンドを実行します。",
+                    FORMAT: "FORMAT - 仮想ディスクをフォーマットします。",
+                    FSUTIL: "FSUTIL - ファイルシステムユーティリティです。",
+                    FTYPE: "FTYPE - ファイルの関連付けを表示/変更します。",
+                    GOTO: "GOTO - バッチファイル内のラベルへ移動します。",
+                    GPRESULT: "GPRESULT - グループポリシー情報を表示します。",
+                    HELP: "HELP [コマンド] - コマンドのヘルプを表示します。",
+                    ICACLS: "ICACLS - ファイル権限を管理します。",
+                    IF: "IF - 条件付き処理を実行します。",
+                    JAVASCRIPT: "JAVASCRIPT ファイル名.js (JS) - JavaScriptを実行します。",
+                    LABEL: "LABEL - ボリュームラベルを作成/変更します。",
+                    MD: "MD パス - ディレクトリを作成します。",
+                    MEM: "MEM - メモリと仮想ファイルストレージ状態を表示します。",
+                    MKDIR: "MKDIR パス - ディレクトリを作成します。",
+                    MKLINK: "MKLINK - シンボリックリンクを作成します。",
+                    MODE: "MODE - システムデバイスを構成します。",
+                    MORE: "MORE - 1画面ずつ出力を表示します。",
+                    MOVE: "MOVE 移動元 移動先 - ファイルを移動します。",
+                    OPENFILES: "OPENFILES - 共有ファイルを表示します。",
+                    PATH: "PATH - 実行ファイルの検索パスを設定します。",
+                    PAUSE: "PAUSE - バッチファイルの処理を一時停止します。",
+                    POPD: "POPD - PUSHDで保存したディレクトリに戻ります。",
+                    PRINT: "PRINT - テキストファイルを印刷します。",
+                    PROMPT: "PROMPT - コマンドプロンプトを変更します。",
+                    PUSHD: "PUSHD - 現在のディレクトリを保存して移動します。",
+                    RD: "RD パス - ディレクトリを削除します。",
+                    RECOVER: "RECOVER - 破損したディスクからデータを復元します。",
+                    REM: "REM - バッチファイル内にコメントを記録します。",
+                    REN: "REN 旧名 新名 - ファイル名を変更します。",
+                    RENAME: "RENAME 旧名 新名 - ファイル名を変更합니다。",
+                    REPLACE: "REPLACE - ファイルを置き換えます。",
+                    RMDIR: "RMDIR パス - ディレクトリを削除します。",
+                    ROBOCOPY: "ROBOCOPY - 高機能ファイルコピーユーティリティです。",
+                    RUN: "RUN ファイル名.exe - DOSプログラムを実行します。",
+                    SET: "SET [変数=値] - 環境変数を表示/設定します。",
+                    SETLOCAL: "SETLOCAL - バッチファイルの環境変更のローカライズを開始します。",
+                    SC: "SC - サービスコントローラユーティリティです。",
+                    SCHTASKS: "SCHTASKS - タスクをスケジュールします。",
+                    SHIFT: "SHIFT - バッチパラメータの位置をシフトします。",
+                    SHUTDOWN: "SHUTDOWN - システムをシャットダウンします。",
+                    SORT: "SORT - 入力データを並べ替えます。",
+                    START: "START - 別のウィンドウでプログラムを開始します。",
+                    SUBST: "SUBST - パスをドライブ文字に関連付けます。",
+                    SYSTEMINFO: "SYSTEMINFO - システム情報を表示します。",
+                    TASKLIST: "TASKLIST - 実行中のプロセス一覧を表示します。",
+                    TASKKILL: "TASKKILL - プロセスを終了します。",
+                    TIME: "TIME - システム時刻を表示します。",
+                    TITLE: "TITLE - ウィンドウタイトルを設定します。",
+                    TREE: "TREE - ディレクトリ構造をグラフィカルに表示します。",
+                    TYPE: "TYPE ファイル名 - テキストファイルの内容を表示します。",
+                    UPLOAD: "UPLOAD [-f] - ファイルまたはフォルダZIPをアップロードします。",
+                    VER: "VER - WEB-DOSのバージョンを表示します。",
+                    VERIFY: "VERIFY - ファイル書き込みの検証を設定します。",
+                    VOL: "VOL - ボリュームラベルを表示します。",
+                    XCOPY: "XCOPY - ファイルとディレクトリ構造をコピーします。",
+                    WMIC: "WMIC - WMIコンソールを開始します。"
+                },
+                cn: {
+                    ASSOC: "ASSOC - 显示文件扩展名关联。",
+                    ATTRIB: "ATTRIB - 显示或更改文件属性。",
+                    BEEP: "BEEP - 播放复古 PC 扬声器蜂鸣声。",
+                    BREAK: "BREAK - 设置扩展 CTRL+C 检查。",
+                    BCDEDIT: "BCDEDIT - 设置引导数据库属性。",
+                    CACLS: "CACLS - 显示或修改文件的访问控制列表(ACL)。",
+                    CALL: "CALL - 从一个批处理程序调用另一个批处理程序。",
+                    CD: "CD - 显示当前目录名或改变当前目录。",
+                    CHCP: "CHCP - 显示或设置活动代码页编号。",
+                    CHDIR: "CHDIR - 改变当前目录。",
+                    CHKDSK: "CHKDSK - 检查磁盘并显示状态报告。",
+                    CHKNTFS: "CHKNTFS - 显示启动时的磁盘检查。",
+                    CLS: "CLS - 清除屏幕。",
+                    CMD: "CMD - 打开新的命令提示符窗口。",
+                    COLOR: "COLOR [0A|0B|0E] - 设置控制台前景色。",
+                    COMP: "COMP - 比较两个或两组文件的内容。",
+                    COMPACT: "COMPACT - 显示或改变文件的压缩状态。",
+                    CONFIG: "CONFIG [en|kr|jp|cn] - 配置系统语言。",
+                    CONVERT: "CONVERT - 将 FAT 卷转换为 NTFS。",
+                    COPY: "COPY 源 目的 - 将一份或多份文件复制到另一个位置。",
+                    DATE: "DATE - 显示或设置日期。",
+                    DEL: "DEL 文件名 - 删除一个或多个文件。",
+                    DIR: "DIR - 显示目录中的文件和子文件夹列表。",
+                    DISKPART: "DISKPART - 显示或配置磁盘分区属性。",
+                    DOCTOR: "DOCTOR - 运行 js-dos 模拟器环境诊断。",
+                    DOSKEY: "DOSKEY - 编辑命令行、撤回 Windows 命令并创建宏。",
+                    DRIVERQUERY: "DRIVERQUERY - 显示当前设备驱动程序状态。",
+                    ECHO: "ECHO [文本] - 显示消息。",
+                    EDIT: "EDIT 文件名.txt - 打开全屏复古文本编辑器。",
+                    ENDLOCAL: "ENDLOCAL - 结束批处理文件中环境变更的本地化。",
+                    ERASE: "ERASE - 删除文件。",
+                    EXIT: "EXIT - 退出命令解释程序或关闭游戏。",
+                    FC: "FC - 比较两个文件并显示它们之间的不同。",
+                    FIND: "FIND \"字符串\" 文件名 - 在文件中搜索文本字符串。",
+                    FINDSTR: "FINDSTR - 在 localized 文件中搜索字符串。",
+                    FOR: "FOR - 对一组文件中的每个文件运行指定命令。",
+                    FORMAT: "FORMAT - 格式化虚拟磁盘。",
+                    FSUTIL: "FSUTIL - 文件系统实用工具。",
+                    FTYPE: "FTYPE - 显示或修改在文件扩展名关联中使用的文件类型。",
+                    GOTO: "GOTO - 将批处理程序定向到带标签的行。",
+                    GPRESULT: "GPRESULT - 显示组策略信息。",
+                    HELP: "HELP [命令] - 提供 Windows 命令的帮助信息。",
+                    ICACLS: "ICACLS - 显示、修改、备份或还原文件权限。",
+                    IF: "IF - 在批处理程序中执行条件处理。",
+                    JAVASCRIPT: "JAVASCRIPT 文件名.js (JS) - 执行上传的 JavaScript 文件。",
+                    LABEL: "LABEL - 创建、更改或删除磁盘的卷标。",
+                    MD: "MD 路径 - 创建目录。",
+                    MEM: "MEM - 显示内存和虚拟文件存储状态。",
+                    MKDIR: "MKDIR 路径 - 创建目录。",
+                    MKLINK: "MKLINK - 创建符号链接或硬链接。",
+                    MODE: "MODE - 配置系统设备。",
+                    MORE: "MORE - 逐屏显示输出。",
+                    MOVE: "MOVE 源 目的 - 移动文件。",
+                    OPENFILES: "OPENFILES - 显示远程用户打开的共享文件。",
+                    PATH: "PATH - 为可执行文件显示或设置搜索路径。",
+                    PAUSE: "PAUSE - 暂停批处理文件的处理并显示消息。",
+                    POPD: "POPD - 还原 PUSHD 保存的当前目录的旧值。",
+                    PRINT: "PRINT - 打印文本文件。",
+                    PROMPT: "PROMPT - 更改命令提示符。",
+                    PUSHD: "PUSHD - 保存当前目录，然后对其进行更改。",
+                    RD: "RD 路径 - 删除目录。",
+                    RECOVER: "RECOVER - 从损坏的磁盘中恢复可读信息。",
+                    REM: "REM - 在批处理文件中记录注释。",
+                    REN: "REN 旧名 新名 - 重命名文件。",
+                    RENAME: "RENAME 旧名 新名 - 重命名文件。",
+                    REPLACE: "REPLACE - 替换文件。",
+                    RMDIR: "RMDIR 路径 - 删除目录。",
+                    ROBOCOPY: "ROBOCOPY - 高级文件和目录树复制工具。",
+                    RUN: "RUN 文件名.exe - 运行 DOS 程序(.EXE, .COM, .BAT)。",
+                    SET: "SET [变量=值] - 显示、设置或删除环境变量。",
+                    SETLOCAL: "SETLOCAL - 开始批处理文件中环境变更的本地化。",
+                    SC: "SC - 服务控制器实用工具。",
+                    SCHTASKS: "SCHTASKS - 安排命令和程序在计算机上运行。",
+                    SHIFT: "SHIFT - 更改批处理文件中可替换参数的位置。",
+                    SHUTDOWN: "SHUTDOWN - 关机或重启。",
+                    SORT: "SORT - 对输入进行排序。",
+                    START: "START - 启动单独的窗口来运行指定程序。",
+                    SUBST: "SUBST - 将路径与驱动器号关联。",
+                    SYSTEMINFO: "SYSTEMINFO - 显示计算机的特定属性和配置。",
+                    TASKLIST: "TASKLIST - 显示当前正在运行的所有任务。",
+                    TASKKILL: "TASKKILL - 终止正在运行的进程。",
+                    TIME: "TIME - 显示系统时间。",
+                    TITLE: "TITLE - 设置命令提示符窗口的窗口标题。",
+                    TREE: "TREE - 以图形方式显示驱动器或路径的目录结构。",
+                    TYPE: "TYPE 文件名 - 显示文本文件的内容。",
+                    UPLOAD: "UPLOAD [-f] - 打开文件或文件夹 zip 上传窗口。",
+                    VER: "VER - 显示 WEB-DOS 版本。",
+                    VERIFY: "VERIFY - 告诉系统是否验证文件已正确写入。",
+                    VOL: "VOL - 显示磁盘卷标和序列号。",
+                    XCOPY: "XCOPY - 复制文件和目录树。",
+                    WMIC: "WMIC - 在交互式命令 shell 中显示 WMI 信息。"
+                }
             };
 
             let currentLang = 'en';
             const tr = k => (i18n[currentLang] && i18n[currentLang][k]) || i18n.en[k] || k;
+            const getHelpDoc = cmd => (helpDocs[currentLang] && helpDocs[currentLang][cmd]) || helpDocs.en[cmd] || (cmd + " - DOS Command.");
+
+            function updateUIForLanguage() {
+                try {
+                    $('editor-header').textContent = tr('editorTitle');
+                    $('editor-hint').textContent = tr('editorHint');
+                    $('x').textContent = tr('exitBtn');
+                } catch(e) {}
+            }
 
             (function detectBrowserLanguage() {
                 try {
@@ -349,6 +743,7 @@
                 } catch (e) {
                     currentLang = 'en';
                 }
+                updateUIForLanguage();
             })();
 
             const $=id=>document.getElementById(id), T=$('t'), O=$('o'), I=$('in');
@@ -394,38 +789,48 @@
                 help(a){ 
                     if(a[0]) {
                         const targetCmd = a[0].toUpperCase();
-                        if(helpDocs[targetCmd]) {
-                            out(helpDocs[targetCmd], 'cyan');
+                        const doc = getHelpDoc(targetCmd);
+                        if(doc) {
+                            out(doc, 'cyan');
                         } else {
-                            out(`No help topic available for command "${targetCmd}".`, 'err');
+                            out(tr('noHelpFor') + `"${targetCmd}".`, 'err');
                         }
                         return;
                     }
                     out(tr('helpHeader'), 'hi');
                     out('');
-                    const sortedCmds = Object.keys(helpDocs).sort();
+                    const sortedCmds = Object.keys(helpDocs.en).sort();
                     for(const cmd of sortedCmds) {
-                        const doc = helpDocs[cmd];
-                        const summary = doc.includes(' - ') ? doc.split(' - ')[1] : doc;
-                        out(cmd.padEnd(14) + summary);
+                        const doc = getHelpDoc(cmd);
+                        const idx = doc.indexOf(' - ');
+                        if (idx !== -1) {
+                            const left = doc.slice(0, idx);
+                            const right = doc.slice(idx + 3);
+                            out(left.padEnd(22) + right);
+                        } else {
+                            out(doc);
+                        }
                     }
                     out('');
                 },
                 config(a){
                     if(!a[0]) return out('Current language: ' + currentLang + ' (english/en, korean/kr, japanese/jp, chinese/cn)', 'hi');
                     const arg = a[0].toLowerCase();
-                    if(['en', 'english'].includes(arg)) { currentLang = 'en'; out(tr('langChanged'), 'ok'); }
-                    else if(['kr', 'ko', 'korean'].includes(arg)) { currentLang = 'kr'; out(tr('langChanged'), 'ok'); }
-                    else if(['jp', 'ja', 'japanese'].includes(arg)) { currentLang = 'jp'; out(tr('langChanged'), 'ok'); }
-                    else if(['cn', 'zh', 'chinese'].includes(arg)) { currentLang = 'cn'; out(tr('langChanged'), 'ok'); }
-                    else { out(tr('invalidLang'), 'err'); }
+                    if(['en', 'english'].includes(arg)) { currentLang = 'en'; }
+                    else if(['kr', 'ko', 'korean'].includes(arg)) { currentLang = 'kr'; }
+                    else if(['jp', 'ja', 'japanese'].includes(arg)) { currentLang = 'jp'; }
+                    else if(['cn', 'zh', 'chinese'].includes(arg)) { currentLang = 'cn'; }
+                    else { return out(tr('invalidLang'), 'err'); }
+                    
+                    updateUIForLanguage();
+                    out(tr('langChanged'), 'ok');
                     prompt();
                 },
-                assoc(a){ helpDocs.ASSOC && out(helpDocs.ASSOC); },
-                attrib(a){ helpDocs.ATTRIB && out(helpDocs.ATTRIB); },
+                assoc(a){ out(getHelpDoc('ASSOC')); },
+                attrib(a){ out(getHelpDoc('ATTRIB')); },
                 break(a){ out('BREAK is ON'); },
                 bcdedit(){ out('Boot Configuration Data Store Editor (Simulated)\nIdentifier: {current}\ndevice: partition=C:\npath: \\Windows\\system32\\winload.exe'); },
-                cacls(a){ helpDocs.CACLS && out(helpDocs.CACLS); },
+                cacls(a){ out(getHelpDoc('CACLS')); },
                 call(a){ if(a[0]) out('Calling batch file: ' + a[0]); else out(tr('reqParam'), 'err'); },
                 cd(a){
                     if(!a[0]) return out('C:\\' + cwd.join('\\').toUpperCase());
@@ -436,21 +841,21 @@
                 chdir(a){ cmds.cd(a); },
                 chcp(a){ if(a[0]) out('Active code page: ' + a[0]); else out('Active code page: 437'); },
                 chkdsk(){
-                    out('The type of the file system is FAT32.');
-                    out('Volume Serial Number is 437A-9F01');
-                    out('32,768,000 bytes total disk space.');
+                    out(tr('chkdskType'));
+                    out(tr('chkdskSerial'));
+                    out(tr('chkdskTotal'));
                     out(`${files.size} files taking ${Array.from(files.values()).reduce((a,b)=>a+b.d.length,0)} bytes.`);
-                    out('32,000,000 bytes available on disk.');
+                    out(tr('chkdskAvail'));
                 },
                 chkntfs(){ out('C: is not dirty.'); },
                 cls(){ O.innerHTML=''; },
-                cmd(){ out('Microsoft Windows DOS Shell [Version 1.02.437]'); },
+                cmd(){ out('Microsoft Windows DOS Shell [Version 1.06.437]'); },
                 color(a){
                     const code = a[0] || '';
-                    if(code === '0a' || code === '2') { T.style.color = '#5f5'; out('Color set to Terminal Green', 'ok'); }
-                    else if(code === '0b' || code === '3') { T.style.color = '#5ff'; out('Color set to Neon Cyan', 'cyan'); }
-                    else if(code === '0e' || code === '6') { T.style.color = '#ff5'; out('Color set to Amber Gold', 'yellow'); }
-                    else { T.style.color = '#aaa'; out('Color reset to default grey'); }
+                    if(code === '0a' || code === '2') { T.style.color = '#5f5'; out(tr('colorGreen'), 'ok'); }
+                    else if(code === '0b' || code === '3') { T.style.color = '#5ff'; out(tr('colorCyan'), 'cyan'); }
+                    else if(code === '0e' || code === '6') { T.style.color = '#ff5'; out(tr('colorYellow'), 'yellow'); }
+                    else { T.style.color = '#aaa'; out(tr('colorReset')); }
                 },
                 comp(a){
                     if(!a[0] || !a[1]) return out('Usage: COMP file1 file2', 'err');
@@ -470,7 +875,7 @@
                     if(!src) return out(tr('fileNotFound'), 'err');
                     const destPath = resolve(a[1]).join('/');
                     addFile(destPath, new Uint8Array(src.d));
-                    out('        1 file(s) copied.', 'ok');
+                    out(tr('fileCopied'), 'ok');
                 },
                 date(){ out('Current date is ' + new Date().toLocaleDateString()); },
                 del(a){
@@ -478,7 +883,7 @@
                     const f=files.get(lc(resolve(a[0])));
                     if(!f) return out(tr('fileNotFound'), 'err');
                     files.delete(lc(resolve(a[0])));
-                    out('File deleted successfully.', 'ok');
+                    out(tr('fileDeleted'), 'ok');
                 },
                 erase(a){ cmds.del(a); },
                 
@@ -494,7 +899,6 @@
                     let totalDirs = 0;
                     let totalSize = 0;
 
-                    // Direct subdirectories
                     for (const d of dirs) {
                         if (d && par(d) === k) {
                             totalDirs++;
@@ -506,7 +910,6 @@
                         }
                     }
 
-                    // Direct files in current folder
                     for (const [fk, v] of files) {
                         if (par(fk) === k) {
                             totalFiles++;
@@ -515,7 +918,6 @@
                         }
                     }
 
-                    // Also display nested files directly so user can see all files immediately
                     const nestedFiles = [...files.values()].filter(v => {
                         const fileKey = v.p.toLowerCase();
                         return fileKey.startsWith(k ? k + '/' : '') && par(fileKey) !== k;
@@ -523,7 +925,7 @@
 
                     if (nestedFiles.length > 0) {
                         out('');
-                        out('--- SUBFOLDER FILES (SUB-DIRECTORY CONTENTS) ---', 'cyan');
+                        out(tr('subfolderHeader'), 'cyan');
                         for (const v of nestedFiles) {
                             totalFiles++;
                             totalSize += v.d.length;
@@ -535,9 +937,9 @@
                     out('');
                     out(`  ${totalFiles}${tr('filesBytes')}${fmt(totalSize)}${tr('bytesStr')}`);
                     out(`  ${totalDirs}${tr('dirsStr')}`);
-                    out(`  32,768,000 bytes free`);
+                    out(`  32,768,000${tr('freeSpace')}`);
                 },
-                diskpart(){ out('Microsoft DiskPart version 1.02\nDISK 0 : 32 MB Virtual Web Storage'); },
+                diskpart(){ out('Microsoft DiskPart version 1.06\nDISK 0 : 32 MB Virtual Web Storage'); },
                 doskey(){ out('DOSKEY buffer initialized.'); },
                 driverquery(){ out('Module Name  Display Name          Driver Type    Link Date\n==========================================================='); out('jsdos.sys    JS-DOS Emulator Engine Kernel Driver  10/02/2026'); },
                 echo(a){ out(a.join(' ')); },
@@ -580,7 +982,6 @@
 
                     const code = new TextDecoder('utf-8').decode(f.d);
 
-                    // Custom Console Interceptor
                     const customConsole = {
                         log: (...args) => out(args.map(x => typeof x === 'object' ? JSON.stringify(x) : x).join(' ')),
                         warn: (...args) => out('[WARN] ' + args.map(x => typeof x === 'object' ? JSON.stringify(x) : x).join(' '), 'yellow'),
@@ -588,7 +989,6 @@
                         info: (...args) => out(args.map(x => typeof x === 'object' ? JSON.stringify(x) : x).join(' '), 'cyan')
                     };
 
-                    // Virtual File System API helper for JS scripts
                     const FS = {
                         read: (filename) => {
                             const targetKey = lc(resolve(filename));
@@ -636,7 +1036,7 @@
                 rmdir(a){
                     if(!a[0]) return out(tr('reqParam'), 'err');
                     const k = lc(resolve(a[0]));
-                    if(dirs.has(k)) { dirs.delete(k); out('Directory removed.', 'ok'); }
+                    if(dirs.has(k)) { dirs.delete(k); out(tr('dirRemoved'), 'ok'); }
                     else out(tr('invDir'), 'err');
                 },
                 recover(){ out('Disk recovery completed. 0 bad sectors found.'); },
@@ -650,7 +1050,7 @@
                     files.delete(srcKey);
                     const destPath = resolve(a[1]).join('/');
                     addFile(destPath, src.d);
-                    out('File renamed.', 'ok');
+                    out(tr('fileRenamed'), 'ok');
                 },
                 replace(a){ cmds.copy(a); },
                 robocopy(a){ cmds.copy(a); },
@@ -671,11 +1071,11 @@
                 start(a){ if(a[0]) cmds.run(a); },
                 subst(a){ out('Drive substitution configured.'); },
                 systeminfo(){
-                    out('Host Name:                 WEB-DOS-PC');
-                    out('OS Name:                   WEB-DOS 1.02 Virtual Shell');
-                    out('OS Version:                1.02.437 Build 2026');
-                    out('System Type:               x86/x64 Web Browser Environment');
-                    out('Total Physical Memory:     640 KB Base / 32 MB Extended');
+                    out(tr('sysInfoHost'));
+                    out('OS Name:                   WEB-DOS 1.06 Virtual Shell');
+                    out(tr('sysInfoOS'));
+                    out(tr('sysInfoType'));
+                    out(tr('sysInfoMem'));
                 },
                 tasklist(){
                     out('Image Name                     PID Session Name        Mem Usage');
@@ -709,13 +1109,13 @@
                     ensureDos().then(s=>out(tr('dosLoad') + s.n + ')', 'ok')).catch(e=>out(e.message||'Error', 'err'));
                 },
                 mem(){
-                    out('640K conventional memory free: 590 KB', 'cyan');
-                    out('Extended memory (XMS): 32,768 KB', 'cyan');
-                    out('Total virtual files stored: ' + files.size, 'yellow');
+                    out(tr('memBase'), 'cyan');
+                    out(tr('memXMS'), 'cyan');
+                    out(tr('memFiles') + files.size, 'yellow');
                 },
                 beep(){
                     playBeep(1000, 150);
-                    out('BEEP!');
+                    out(tr('beepMsg'));
                 },
                 edit(a){
                     if(!a[0]) return out(tr('editUsage'), 'err');
@@ -729,6 +1129,7 @@
                     editingFile = { path: p.join('/'), key: key };
                     $('editor-filename').textContent = a[0].toUpperCase();
                     $('editor-textarea').value = text;
+                    updateUIForLanguage();
                     $('editor').style.display = 'flex';
                     $('editor-textarea').focus();
                 },
@@ -876,7 +1277,6 @@ ${dirp?'cd '+dirp+'\n':''}${base(inner)}
                 let n = 0; 
                 const cp = cwd.join('/'), pre = cp ? cp + '/' : '';
                 
-                // Helper to check and strip single top level folder if present
                 const preparedItems = [];
                 for (const f of list) {
                     if (/\.(zip|jsdos)$/i.test(f.name) && !f.webkitRelativePath) {
@@ -887,7 +1287,6 @@ ${dirp?'cd '+dirp+'\n':''}${base(inner)}
                     }
                 }
 
-                // Detect if all standard uploaded files share a single root folder
                 const filePaths = preparedItems.filter(i => i.type === 'file').map(i => i.path);
                 const firstSlashIndexes = filePaths.map(p => p.indexOf('/'));
                 const hasSubfolders = filePaths.length > 0 && firstSlashIndexes.every(idx => idx > 0);
@@ -941,10 +1340,9 @@ ${dirp?'cd '+dirp+'\n':''}${base(inner)}
 
                 out(`${n}` + tr('uploadComplete'), 'ok');
 
-                // Print uploaded file names directly so user sees the file list immediately
                 if (uploadedNames.length > 0) {
                     out('');
-                    out('--- UPLOADED FILE LIST ---', 'cyan');
+                    out(tr('uploadedHeader'), 'cyan');
                     uploadedNames.forEach(fn => out('  ' + fn.replace(/\//g, '\\').toUpperCase(), 'ok'));
                     out('');
                 }
@@ -1032,6 +1430,7 @@ ${dirp?'cd '+dirp+'\n':''}${base(inner)}
             ensureDos().catch(()=>{});
             T.onclick=()=>{if(!getSelection().toString() && $('editor').style.display !== 'flex')I.focus()};
 
+            updateUIForLanguage();
             out(tr('intro1'),'hi');
             out(tr('intro2'));
             out('');
