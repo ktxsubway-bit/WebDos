@@ -428,6 +428,7 @@
                     TITLE: "TITLE - Sets window title.",
                     TREE: "TREE - Graphically displays directory structure.",
                     TYPE: "TYPE filename - Displays text file contents.",
+                    LOAD: "LOAD A-Z [-n] - Loads game from GitHub folder (a-z except c) and runs it.",
                     UPLOAD: "UPLOAD [-f] - Uploads files or directory zip.",
                     VER: "VER - Displays DOS version.",
                     VERIFY: "VERIFY - Verifies file writing.",
@@ -521,6 +522,7 @@
                     TITLE: "TITLE - 창 제목을 설정합니다.",
                     TREE: "TREE - 디렉토리 구조를 그래픽으로 표시합니다.",
                     TYPE: "TYPE 파일명 - 텍스트 파일의 내용을 출력합니다.",
+                    LOAD: "LOAD A-Z [-n] - 깃허브 폴더(c 제외 a~z)의 게임을 불러와 실행합니다.",
                     UPLOAD: "UPLOAD [-f] - 파일 또는 폴더 zip 선택창을 엽니다.",
                     VER: "VER - WEB-DOS 버전을 표시합니다.",
                     VERIFY: "VERIFY - 파일 기록 검증 여부를 설정합니다.",
@@ -614,6 +616,7 @@
                     TITLE: "TITLE - ウィンドウタイトルを設定します。",
                     TREE: "TREE - ディレクトリ構造をグラフィカルに表示します。",
                     TYPE: "TYPE ファイル名 - テキストファイルの内容を表示します。",
+                    LOAD: "LOAD A-Z [-n] - GitHubフォルダ(cを除くa～z)のゲームを読み込んで実行します。",
                     UPLOAD: "UPLOAD [-f] - ファイルまたはフォルダZIPをアップロードします。",
                     VER: "VER - WEB-DOSのバージョンを表示します。",
                     VERIFY: "VERIFY - ファイル書き込みの検証を設定します。",
@@ -707,6 +710,7 @@
                     TITLE: "TITLE - 设置命令提示符窗口的窗口标题。",
                     TREE: "TREE - 以图形方式显示驱动器或路径的目录结构。",
                     TYPE: "TYPE 文件名 - 显示文本文件的内容。",
+                    LOAD: "LOAD A-Z [-n] - 从 GitHub 文件夹(除 c 外的 a~z)加载并运行游戏。",
                     UPLOAD: "UPLOAD [-f] - 打开文件或文件夹 zip 上传窗口。",
                     VER: "VER - 显示 WEB-DOS 版本。",
                     VERIFY: "VERIFY - 告诉系统是否验证文件已正确写入。",
@@ -1347,6 +1351,189 @@ ${dirp?'cd '+dirp+'\n':''}${base(inner)}
                     out('');
                 }
             }
+
+
+            // ================= LOAD : GitHub 폴더(a~z, c 제외)에서 게임 불러오기 =================
+            const LM = {
+                en: {
+                    usage: 'Usage: LOAD A   (A-Z except C / add -n to load without running)',
+                    reserved: 'C: is the system drive. Use another letter (A-Z, except C).',
+                    local: 'LOAD needs to be hosted online (e.g. GitHub Pages). It cannot read folders from file://.',
+                    loading: d => 'Loading ' + d.toUpperCase() + '\\ ...',
+                    notFound: d => 'Nothing found in folder "' + d + '/". Put the game files (or game.zip) in that folder on GitHub.',
+                    ghErr: e => 'GitHub API error: ' + e + ' (rate limit? try packing the game as game.zip)',
+                    progress: (i, n) => '  downloading ' + i + '/' + n,
+                    done: (n, mb, d) => n + ' file(s) loaded (' + mb + ' MB) → ' + d.toUpperCase() + '\\',
+                    noExe: 'No .EXE/.COM/.BAT found in this folder.',
+                    pick: 'Several programs found. Type one of these:'
+                },
+                kr: {
+                    usage: '사용법: LOAD A   (C를 제외한 A~Z / -n 을 붙이면 실행 없이 불러오기만)',
+                    reserved: 'C: 는 시스템 드라이브입니다. C를 제외한 다른 알파벳(A~Z)을 사용하세요.',
+                    local: 'LOAD는 온라인(GitHub Pages 등)에 올려야 동작합니다. file:// 에서는 폴더를 읽을 수 없습니다.',
+                    loading: d => d.toUpperCase() + '\\ 불러오는 중...',
+                    notFound: d => '"' + d + '/" 폴더에서 파일을 찾지 못했습니다. 깃허브의 해당 폴더에 게임 파일(또는 game.zip)을 넣어주세요.',
+                    ghErr: e => 'GitHub API 오류: ' + e + ' (요청 제한일 수 있음 → 게임을 game.zip 으로 묶어 올리세요)',
+                    progress: (i, n) => '  다운로드 중 ' + i + '/' + n,
+                    done: (n, mb, d) => n + '개 파일 로드 완료 (' + mb + ' MB) → ' + d.toUpperCase() + '\\',
+                    noExe: '이 폴더에 .EXE/.COM/.BAT 파일이 없습니다.',
+                    pick: '실행 파일이 여러 개입니다. 아래 중 하나를 입력하세요:'
+                },
+                jp: {
+                    usage: '使い方: LOAD A   (Cを除くA～Z / -n で実行せず読み込みのみ)',
+                    reserved: 'C: はシステムドライブです。C以外のアルファベット(A～Z)を使ってください。',
+                    local: 'LOADはオンライン(GitHub Pagesなど)で動作します。file:// ではフォルダを読めません。',
+                    loading: d => d.toUpperCase() + '\\ を読み込み中...',
+                    notFound: d => 'フォルダ "' + d + '/" にファイルが見つかりません。GitHubのそのフォルダにゲームファイル(またはgame.zip)を入れてください。',
+                    ghErr: e => 'GitHub APIエラー: ' + e + ' (制限の可能性 → game.zip にまとめてください)',
+                    progress: (i, n) => '  ダウンロード中 ' + i + '/' + n,
+                    done: (n, mb, d) => n + '個のファイルを読み込みました (' + mb + ' MB) → ' + d.toUpperCase() + '\\',
+                    noExe: 'このフォルダに .EXE/.COM/.BAT がありません。',
+                    pick: '実行ファイルが複数あります。次のいずれかを入力してください:'
+                },
+                cn: {
+                    usage: '用法: LOAD A   (除 C 外的 A~Z / 加 -n 只加载不运行)',
+                    reserved: 'C: 是系统驱动器。请使用 C 以外的字母 (A~Z)。',
+                    local: 'LOAD 需要部署在线上 (如 GitHub Pages)，无法在 file:// 下读取文件夹。',
+                    loading: d => '正在加载 ' + d.toUpperCase() + '\\ ...',
+                    notFound: d => '在文件夹 "' + d + '/" 中未找到文件。请把游戏文件 (或 game.zip) 放进 GitHub 的该文件夹。',
+                    ghErr: e => 'GitHub API 错误: ' + e + ' (可能被限流 → 请打包成 game.zip)',
+                    progress: (i, n) => '  下载中 ' + i + '/' + n,
+                    done: (n, mb, d) => '已加载 ' + n + ' 个文件 (' + mb + ' MB) → ' + d.toUpperCase() + '\\',
+                    noExe: '该文件夹中没有 .EXE/.COM/.BAT。',
+                    pick: '找到多个程序，请输入以下之一:'
+                }
+            };
+            const lm = (k, ...a) => { const s = (LM[currentLang] && LM[currentLang][k]) || LM.en[k]; return typeof s === 'function' ? s(...a) : s; };
+            const encPath = p => p.split('/').map(encodeURIComponent).join('/');
+            const skipName = n => /(^|\/)(\.gitkeep|\.gitignore|\.DS_Store|Thumbs\.db)$/i.test(n) || /^__MACOSX\//.test(n);
+            let loading = false, ghErr = null;
+
+            // 방법 1: <폴더>/files.json  (파일 경로 배열)
+            async function srcManifest(dir) {
+                try {
+                    const r = await fetch(dir + '/files.json', { cache: 'no-cache' });
+                    if (!r.ok) return null;
+                    const j = await r.json();
+                    const arr = (Array.isArray(j) ? j : (j.files || [])).filter(p => typeof p === 'string' && !skipName(p));
+                    if (!arr.length) return null;
+                    return { dir, list: arr.map(p => ({ path: p, get: async () => {
+                        const rr = await fetch(dir + '/' + encPath(p)); if (!rr.ok) throw new Error(p + ' ' + rr.status);
+                        return new Uint8Array(await rr.arrayBuffer());
+                    } })) };
+                } catch (e) { return null; }
+            }
+
+            // 방법 2: <폴더>/game.zip (또는 game.jsdos)
+            async function srcZip(dir) {
+                for (const nm of ['game.zip', 'game.jsdos']) {
+                    try {
+                        const r = await fetch(dir + '/' + nm, { cache: 'no-cache' });
+                        if (!r.ok) continue;
+                        const z = await JSZip.loadAsync(await r.arrayBuffer());
+                        const ents = Object.values(z.files).filter(e => !e.dir && !skipName(e.name));
+                        if (!ents.length) continue;
+                        const tops = new Set(ents.map(e => e.name.split('/')[0]));
+                        const strip = tops.size === 1 && ents.every(e => e.name.includes('/'));
+                        return { dir, list: ents.map(e => ({
+                            path: strip ? e.name.split('/').slice(1).join('/') : e.name,
+                            get: () => e.async('uint8array')
+                        })) };
+                    } catch (e) {}
+                }
+                return null;
+            }
+
+            // 방법 3: GitHub API 로 폴더 자동 탐색 (xxx.github.io 에서만) — 설정 없이 파일만 올리면 됨
+            async function srcGithub(letter) {
+                const h = location.hostname;
+                if (!/\.github\.io$/i.test(h)) return null;
+                const owner = h.split('.')[0];
+                const segs = location.pathname.split('/').filter(Boolean);
+                const isFile = s => /\.[a-z0-9]+$/i.test(s);
+                const cands = [];
+                if (segs.length && !isFile(segs[0])) cands.push({ repo: segs[0], rest: segs.slice(1) });
+                cands.push({ repo: h, rest: segs });
+                for (const c of cands) {
+                    let rest = c.rest.slice();
+                    if (rest.length && isFile(rest[rest.length - 1])) rest.pop();
+                    const prefix = rest.length ? rest.join('/') + '/' : '';
+                    try {
+                        const r = await fetch('https://api.github.com/repos/' + owner + '/' + c.repo + '/git/trees/HEAD?recursive=1');
+                        if (!r.ok) { ghErr = r.status; continue; }
+                        const j = await r.json();
+                        const want = (prefix + letter + '/').toLowerCase();
+                        const hits = (j.tree || []).filter(t => t.type === 'blob' && t.path.toLowerCase().startsWith(want) && !skipName(t.path));
+                        if (!hits.length) continue;
+                        const dir = hits[0].path.slice(prefix.length).split('/')[0];   // 실제 폴더명(대소문자 유지)
+                        return { dir, list: hits.map(t => {
+                            const rel = t.path.slice(prefix.length + dir.length + 1);
+                            return { path: rel, get: async () => {
+                                const rr = await fetch(dir + '/' + encPath(rel)); if (!rr.ok) throw new Error(rel + ' ' + rr.status);
+                                return new Uint8Array(await rr.arrayBuffer());
+                            } };
+                        }) };
+                    } catch (e) { ghErr = e.message || e; }
+                }
+                return null;
+            }
+
+            cmds.load = async function (a) {
+                const noRun = a.some(x => /^[-\/]n$/i.test(x));
+                const L = (a.find(x => !/^[-\/]/.test(x)) || '').replace(/[:\\\/]+$/, '').toLowerCase();
+                if (!L) return out(lm('usage'), 'err');
+                if (!/^[a-z]$/.test(L)) return out(lm('usage'), 'err');
+                if (L === 'c') return out(lm('reserved'), 'err');
+                if (location.protocol === 'file:') return out(lm('local'), 'err');
+                if (loading) return;
+                loading = true; ghErr = null;
+                try {
+                    out(lm('loading', L), 'cyan');
+                    let found = null;
+                    for (const d of [L, L.toUpperCase()]) {            // 깃허브는 대소문자 구분 → 둘 다 시도
+                        found = (await srcManifest(d)) || (await srcZip(d));
+                        if (found) break;
+                    }
+                    if (!found) found = await srcGithub(L);
+                    if (!found) {
+                        if (ghErr) out(lm('ghErr', ghErr), 'err');
+                        return out(lm('notFound', L), 'err');
+                    }
+
+                    // 기존 같은 폴더 내용 제거 후 다시 로드
+                    for (const k of [...files.keys()]) if (k.startsWith(L + '/')) files.delete(k);
+
+                    const list = found.list, total = list.length;
+                    let idx = 0, done = 0, bytes = 0;
+                    out('');
+                    const bar = O.lastChild;
+                    const worker = async () => {
+                        while (idx < total) {
+                            const it = list[idx++];
+                            const data = await it.get();
+                            addFile(L + '/' + it.path, data);
+                            bytes += data.length; done++;
+                            if (bar) bar.textContent = lm('progress', done, total);
+                        }
+                    };
+                    await Promise.all(Array.from({ length: Math.min(6, total) }, worker));
+                    if (bar) bar.remove();
+                    out(lm('done', total, (bytes / 1048576).toFixed(1), L), 'ok');
+
+                    const exes = list.map(it => L + '/' + it.path).filter(p => /\.(exe|com|bat)$/i.test(p));
+                    if (!exes.length) return out(lm('noExe'), 'yellow');
+                    if (noRun || exes.length > 1) {
+                        if (exes.length > 1) out(lm('pick'), 'yellow');
+                        exes.forEach(p => out('  RUN ' + p.replace(/\//g, '\\').toUpperCase(), 'hi'));
+                        return;
+                    }
+                    out(tr('runningTo') + exes[0].replace(/\//g, '\\').toUpperCase());
+                    launch(files.get(exes[0].toLowerCase()).p);
+                } catch (e) {
+                    out('Error: ' + (e && e.message || e), 'err');
+                } finally { loading = false; }
+            };
+            // =================================================================================
 
             $('fz').onchange=e=>{ingest([...e.target.files]);e.target.value=''};
             $('fd').onchange=e=>{ingest([...e.target.files]);e.target.value=''};
