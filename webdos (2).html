@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WEB-DOS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+html,body{height:100%;margin:0;background:#000}
+#t{height:100%;overflow-y:auto;padding:10px 14px;box-sizing:border-box;color:#aaa;
+ font:16px/1.3 "Perfect DOS VGA 437","Consolas","D2Coding",monospace;white-space:pre-wrap;word-break:break-all}
+#t.drag{outline:3px dashed #5f5;outline-offset:-6px}
+#row{display:flex}
+#in{flex:1;background:none;border:0;outline:0;color:#fff;font:inherit;caret-color:#fff;padding:0}
+.err{color:#f66}.ok{color:#5f5}.hi{color:#fff}
+#game{display:none;position:fixed;inset:0;background:#000;z-index:9}
+#dos{position:absolute;inset:0}
+#x{position:absolute;top:8px;right:8px;z-index:10;background:#a00;color:#fff;border:0;padding:6px 12px;font:14px monospace;cursor:pointer;opacity:.85}
+</style>
+</head>
+<body>
+<div id="t"><div id="o"></div><div id="row"><span id="pr"></span><input id="in" autocomplete="off" spellcheck="false" autofocus></div></div>
+<div id="game"><button id="x">■ EXIT (ESC)</button><div id="dos"></div></div>
+<input type="file" id="fz" multiple accept=".zip,.jsdos,*" hidden>
+<input type="file" id="fd" webkitdirectory multiple hidden>
+<script>
+const $=id=>document.getElementById(id), T=$('t'), O=$('o'), I=$('in');
+const files=new Map(), dirs=new Set(['']);   // key: lowercase path -> {p:original path, d:Uint8Array}
+let cwd=[], hist=[], hi=0, player=null;
+const out=(s='',c='')=>{const d=document.createElement('div');if(c)d.className=c;d.textContent=s;O.appendChild(d);T.scrollTop=T.scrollHeight};
+const prompt=()=>$('pr').textContent='C:\\'+cwd.join('\\').toUpperCase()+'>';
+const resolve=s=>{let p=/^[\\/]/.test(s)?[]:[...cwd];for(const x of s.split(/[\\/]/)){if(!x||x==='.')continue;x==='..'?p.pop():p.push(x)}return p};
+const lc=p=>p.join('/').toLowerCase();
+const addDir=p=>{let a=p.split('/');for(let i=1;i<=a.length;i++)dirs.add(a.slice(0,i).join('/').toLowerCase())};
+const addFile=(p,d)=>{const parts=p.split('/');parts.pop();if(parts.length)addDir(parts.join('/'));files.set(p.toLowerCase(),{p,d})};
+const par=k=>k.includes('/')?k.slice(0,k.lastIndexOf('/')):'';
+const base=p=>p.slice(p.lastIndexOf('/')+1);
+const fmt=n=>n.toLocaleString('en-US');
+
+const cmds={
+help(){out(`사용 가능한 명령어
+  UPLOAD [-f]    파일/ZIP 업로드 (-f 는 폴더 선택). 화면에 드래그&드롭도 가능
+  RUN 파일.EXE   js-dos(DOSBox)로 실행  (.exe .com .bat)
+  DIR [경로]     목록          CD 경로      이동
+  MKDIR 이름     폴더 생성     DEL 파일     삭제
+  TYPE 파일      텍스트 보기   TREE         트리 보기
+  DOCTOR(js-dos 진단) / ECHO / CLS / VER / DATE / TIME / FORMAT(전체 삭제)`,'hi')},
+doctor(){out('주소: '+location.protocol+'//'+location.hostname+(inClaude?'  (Claude 미리보기)':''));out('Worker: '+(typeof Worker)+'   JSZip: '+typeof JSZip+'   Dos: '+typeof Dos);
+ ensureDos().then(s=>out('js-dos 로드 OK ('+s.n+')','ok')).catch(e=>out(e.message,'err'))},
+ver(){out('WEB-DOS [Version 1.0]  powered by js-dos 8 / DOSBox')},
+cls(){O.innerHTML=''}, clear(){O.innerHTML=''},
+echo(a){out(a.join(' '))},
+date(){out('Current date is '+new Date().toLocaleDateString())},
+time(){out('Current time is '+new Date().toLocaleTimeString())},
+format(){files.clear();dirs.clear();dirs.add('');cwd=[];out('모든 파일이 삭제되었습니다.','ok')},
+mkdir(a){if(!a[0])return out('Required parameter missing','err');const p=resolve(a[0]);addDir(p.join('/'));out('')},
+cd(a){if(!a[0])return out('C:\\'+cwd.join('\\').toUpperCase());const p=resolve(a[0]);if(!dirs.has(lc(p)))return out('Invalid directory','err');cwd=p.map((x,i)=>{const f=[...dirs].find(d=>d===lc(p.slice(0,i+1)));const o=[...files.values()].map(v=>v.p.split('/')).find(s=>s[i]&&s.slice(0,i+1).join('/').toLowerCase()===f);return o?o[i]:x})},
+dir(a){const p=a[0]?resolve(a[0]):cwd,k=lc(p);if(!dirs.has(k))return out('File not found','err');
+ out(' Directory of C:\\'+p.join('\\').toUpperCase());out('');let nf=0,nd=0,sz=0;
+ for(const d of dirs)if(d&&par(d)===k){nd++;const nm=[...files.values()].map(v=>v.p.split('/')).map(s=>s[p.length]).find(x=>x&&(k?k+'/':'')+x.toLowerCase()===d)||base(d);out(nm.toUpperCase().padEnd(14)+'<DIR>')}
+ for(const [fk,v] of files)if(par(fk)===k){nf++;sz+=v.d.length;out(base(v.p).toUpperCase().padEnd(14)+fmt(v.d.length).padStart(12))}
+ out(`  ${nf} file(s)  ${fmt(sz)} bytes`);out(`  ${nd} dir(s)`)},
+tree(){const walk=(k,pre)=>{const ch=[...dirs].filter(d=>d&&par(d)===k),fs=[...files.entries()].filter(([f])=>par(f)===k);
+ [...ch.map(d=>[base(d),d]),...fs.map(([f,v])=>[base(v.p),null])].forEach(([n,d])=>{out(pre+n.toUpperCase());if(d)walk(d,pre+'   ')})};walk(lc(cwd),'')},
+del(a){const f=files.get(lc(resolve(a[0]||'')));if(!f)return out('File not found','err');files.delete(lc(resolve(a[0])))},
+type(a){const f=files.get(lc(resolve(a[0]||'')));if(!f)return out('File not found','err');out(new TextDecoder('latin1').decode(f.d))},
+upload(a){(a[0]==='-f'||a[0]==='/f'?$('fd'):$('fz')).click();out('파일 선택창이 열립니다… (취소하려면 창을 닫으세요)')},
+run(a){const arg=a.join(' ').replace(/^["']|["']$/g,'').trim();if(!arg)return out('사용법: RUN 파일이름.exe','err');
+ const hasExt=/\.[a-z0-9]{1,4}$/i.test(arg),exts=hasExt?['']:['.exe','.com','.bat'];
+ let f=null;const p=resolve(arg);
+ for(const e of exts){f=files.get(lc(p)+e);if(f)break}
+ if(!f){ // 경로가 달라도 파일명으로 전체 검색 (현재 폴더 우선)
+  const nm=arg.split(/[\\/]/).pop().toLowerCase();
+  const hits=[...files.values()].filter(v=>exts.some(e=>base(v.p).toLowerCase()===nm+e));
+  const cur=lc(cwd),near=hits.filter(v=>par(v.p.toLowerCase()).startsWith(cur));
+  const pick=near.length?near:hits;
+  if(pick.length>1){out('같은 이름의 파일이 여러 개입니다. 경로를 포함해서 입력하세요:','err');pick.forEach(v=>out('  RUN '+v.p.replace(/\//g,'\\')));return}
+  f=pick[0]}
+ if(!f)return out(arg.toUpperCase()+': 파일을 찾을 수 없습니다. TREE 로 업로드된 파일을 확인하세요.','err');
+ if(!/\.(exe|com|bat)$/i.test(f.p))return out('실행할 수 없는 파일 형식입니다.','err');
+ out('→ '+f.p.replace(/\//g,'\\').toUpperCase());launch(f.p)}
+};
+
+const inClaude=/claudeusercontent\.com$/.test(location.hostname);
+const loadTag=(u,css)=>new Promise((ok,no)=>{const e=document.createElement(css?'link':'script');if(css)e.rel='stylesheet';e[css?'href':'src']=u;
+ const t=setTimeout(()=>no(new Error(u+' 시간 초과')),20000);e.onload=()=>{clearTimeout(t);ok()};e.onerror=()=>{clearTimeout(t);e.remove();no(new Error(u+' 로드 실패'))};document.head.appendChild(e)});
+const SRC=[
+ {n:'v8.js-dos.com',js:'https://v8.js-dos.com/latest/js-dos.js',css:'https://v8.js-dos.com/latest/js-dos.css',pre:''},
+ {n:'jsDelivr',js:'https://cdn.jsdelivr.net/npm/js-dos@8/dist/js-dos.js',css:'https://cdn.jsdelivr.net/npm/js-dos@8/dist/js-dos.css',pre:'https://cdn.jsdelivr.net/npm/emulators@8/dist/'}];
+let dosP=null,dosSrc=null;
+function ensureDos(){
+ if(dosSrc&&typeof Dos==='function')return Promise.resolve(dosSrc);
+ return dosP||(dosP=(async()=>{
+  const errs=[];
+  for(const s of SRC){
+   try{
+    await loadTag(s.css,true).catch(()=>{});
+    await loadTag(s.js);
+    if(typeof Dos!=='function'){try{const m=await import(s.js);const D=m.Dos||m.default;if(typeof D==='function')window.Dos=D}catch(e){}}
+    if(typeof Dos!=='function')throw new Error(s.n+': Dos 를 찾을 수 없음');
+    if(s.pre&&window.emulators)emulators.pathPrefix=s.pre;
+    dosSrc=s;return s;
+   }catch(e){errs.push(e.message)}
+  }
+  dosP=null;throw new Error(errs.join('\n'));
+ })());
+}
+async function launch(path){
+ if(inClaude)out('※ Claude 미리보기에서는 Worker 가 차단되어 실행되지 않을 수 있습니다. 다운로드 후 PC 브라우저로 여세요.','err');
+ out('js-dos 준비 중…','ok');
+ try{await ensureDos()}catch(e){out(e.message,'err');out('→ 인터넷/광고차단/회사망을 확인하고, Claude 미리보기가 아닌 PC 브라우저(file:///)에서 여세요. DOCTOR 로 진단할 수 있습니다.','err');return}
+ // 실행 파일이 들어있는 최상위 폴더만 C:\ 로 마운트 (용량/메모리 절약)
+ const top=path.includes('/')?path.split('/')[0]:null,tl=top&&top.toLowerCase()+'/';
+ const sel=[...files.values()].filter(v=>top?v.p.toLowerCase().startsWith(tl):true);
+ const rel=p=>top?p.slice(top.length+1):p, inner=rel(path);
+ const dirp=inner.includes('/')?inner.slice(0,inner.lastIndexOf('/')).replace(/\//g,'\\'):'';
+ const mb=sel.reduce((n,v)=>n+v.d.length,0)/1048576;
+ out(`${sel.length}개 파일 (${mb.toFixed(1)} MB) 로드${top?' — C:\\ = '+top.toUpperCase():''}`);
+ const conf=`[sdl]\nautolock=false\n[cpu]\ncore=auto\ncycles=max\n[autoexec]\n@echo off\nmount c .\nc:\n${dirp?'cd '+dirp+'\n':''}${base(inner)}\n`;
+ // 매번 새 컨테이너 + 파일 복사본 사용 (Worker 로 넘기면 원본 버퍼가 비워져 두 번째 실행이 깨짐)
+ const host=document.createElement('div');host.style.cssText='position:absolute;inset:0';
+ $('dos').innerHTML='';$('dos').appendChild(host);$('game').style.display='block';
+ try{
+  player=Dos(host,{dosboxConf:conf,initFs:sel.map(v=>({path:rel(v.p),contents:v.d.slice()})),autoStart:true,
+   workerThread:!inClaude,...(dosSrc.pre?{pathPrefix:dosSrc.pre,pathSuffix:''}:{})});
+ }catch(e){$('game').style.display='none';out('실행 오류: '+(e&&e.message||e),'err')}
+}
+async function stopGame(){
+ if($('game').style.display!=='block')return;
+ try{await player?.stop()}catch(e){}
+ $('dos').innerHTML='';player=null;$('game').style.display='none';out('게임이 종료되었습니다.');I.focus();
+}
+$('x').onclick=stopGame;
+
+async function ingest(list){
+ let n=0;const cp=cwd.join('/');const pre=cp?cp+'/':'';
+ for(const f of list){
+  if(/\.(zip|jsdos)$/i.test(f.name)&&!f.webkitRelativePath){
+   const root=f.name.replace(/\.[^.]+$/,'');
+   try{const z=await JSZip.loadAsync(f);const ents=Object.values(z.files).filter(e=>!e.dir&&!/^__MACOSX\/|(^|\/)\.DS_Store$/.test(e.name));
+    const tops=new Set(ents.map(e=>e.name.split('/')[0]));const strip=tops.size===1&&ents.every(e=>e.name.includes('/'));
+    for(const e of ents){let nm=e.name;if(strip)nm=nm.split('/').slice(1).join('/');addFile(pre+root+'/'+nm,await e.async('uint8array'));n++}
+    out(`  ${f.name} → ${root}\\ 압축 해제`,'ok')}catch(e){out(f.name+': 압축 해제 실패','err')}
+  }else{
+   addFile(pre+(f.webkitRelativePath||f.name),new Uint8Array(await f.arrayBuffer()));n++;
+  }
+ }
+ out(`${n}개 파일 업로드 완료. DIR 로 확인 후 RUN 파일.EXE 로 실행하세요.`,'ok');
+}
+$('fz').onchange=e=>{ingest([...e.target.files]);e.target.value=''};
+$('fd').onchange=e=>{ingest([...e.target.files]);e.target.value=''};
+
+// drag & drop (파일, 폴더, zip)
+T.ondragover=e=>{e.preventDefault();T.classList.add('drag')};
+T.ondragleave=()=>T.classList.remove('drag');
+T.ondrop=async e=>{e.preventDefault();T.classList.remove('drag');
+ const all=[];const walk=async(en,path)=>{
+  if(en.isFile)await new Promise(r=>en.file(f=>{Object.defineProperty(f,'webkitRelativePath',{value:path+f.name});all.push(f);r()}));
+  else{const rd=en.createReader();let b;do{b=await new Promise(r=>rd.readEntries(r));for(const c of b)await walk(c,path+en.name+'/')}while(b.length)}};
+ for(const it of e.dataTransfer.items){const en=it.webkitGetAsEntry?.();if(en?.isDirectory)await walk(en,'');else if(en)await new Promise(r=>en.file(f=>{all.push(f);r()}))}
+ ingest(all)};
+
+I.onkeydown=e=>{
+ if(e.key==='Enter'){const l=I.value.trim();out($('pr').textContent+I.value);I.value='';
+  if(l){hist.push(l);hi=hist.length;const [c,...a]=l.split(/\s+/);const fn=cmds[c.toLowerCase()];
+   fn?fn(a):out("'"+c+"' 은(는) 내부/외부 명령이 아닙니다. HELP 를 입력하세요.",'err')}
+  prompt();T.scrollTop=T.scrollHeight}
+ else if(e.key==='ArrowUp'){if(hi>0)I.value=hist[--hi];e.preventDefault()}
+ else if(e.key==='ArrowDown'){I.value=hi<hist.length-1?hist[++hi]:(hi=hist.length,'')}
+};
+addEventListener('keydown',e=>{if(e.key==='Escape')stopGame()});
+addEventListener('error',e=>{if($('game').style.display==='block')out('[오류] '+(e.message||'Script error'),'err')});
+addEventListener('unhandledrejection',e=>{if($('game').style.display==='block')out('[오류] '+(e.reason&&e.reason.message||e.reason),'err')});
+ensureDos().catch(()=>{});
+T.onclick=()=>{if(!getSelection().toString())I.focus()};
+out('WEB-DOS [Version 1.0]','hi');out('(C) Browser DOS — js-dos 8 / DOSBox 기반');out('');
+out('UPLOAD 로 게임 폴더/ZIP 을 올리고  RUN 파일이름.EXE  로 실행하세요. (HELP 참고)');out('');
+prompt();
+</script>
+</body>
+</html>
