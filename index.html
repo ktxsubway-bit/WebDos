@@ -1433,7 +1433,10 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
 
             const getter = (dir, rel) => async () => {
                 const tries = [U(dir + '/' + encPath(rel))];
-                if (GH_REPO) for (const b of GH_BRANCHES.filter(x => x !== 'HEAD')) tries.push('https://raw.githubusercontent.com/' + GH_REPO + '/' + b + '/' + encPath(dir + '/' + rel));
+                if (GH_REPO) for (const b of GH_BRANCHES.filter(x => x !== 'HEAD')) {
+                    tries.push('https://raw.githubusercontent.com/' + GH_REPO + '/' + b + '/' + encPath(dir + '/' + rel));
+                    tries.push('https://cdn.jsdelivr.net/gh/' + GH_REPO + '@' + b + '/' + encPath(dir + '/' + rel));
+                }
                 let last = 0;
                 for (const u of tries) {
                     try {
@@ -1544,6 +1547,29 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                 return null;
             }
 
+            async function srcJsd(letter) {
+                if (!GH_REPO) return null;
+                for (const b of GH_BRANCHES.filter(x => x !== 'HEAD')) {
+                    for (const u of ['https://data.jsdelivr.com/v1/packages/gh/' + GH_REPO + '@' + b + '?structure=flat',
+                                     'https://data.jsdelivr.com/v1/package/gh/' + GH_REPO + '@' + b + '/flat']) {
+                        try {
+                            const r = await fetch(u);
+                            dbg('LIST ' + u.split('/')[5] + '@' + b + ' → ' + r.status);
+                            if (!r.ok) continue;
+                            const j = await r.json();
+                            const names = (j.files || []).map(f => String(f.name || f).replace(/^\//, '')).filter(x => !skipName(x));
+                            const want = letter + '/';
+                            const hits = names.filter(x => x.toLowerCase().startsWith(want));
+                            dbg('folder match: ' + hits.length + ' file(s)');
+                            if (!hits.length) continue;
+                            const dir = hits[0].split('/')[0];
+                            return { dir, list: hits.map(x => { const rel = x.slice(dir.length + 1); return { path: rel, get: getter(dir, rel) }; }) };
+                        } catch (e) { dbg('LIST error: ' + (e.message || e)); }
+                    }
+                }
+                return null;
+            }
+
             cmds.load = async function (a) {
                 verbose = a.some(x => /^[-\/]v$/i.test(x));
                 const L = (a.find(x => !/^[-\/]/.test(x)) || '').replace(/[:\\\/]+$/, '').toLowerCase();
@@ -1561,7 +1587,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                         if (list) { list = await expandZips(list); if (list.length) { found = { dir: d, list }; break; } }
                     }
                     if (!found) {
-                        const g = await srcGithub(L);
+                        const g = (await srcGithub(L)) || (await srcJsd(L));
                         if (g) { const list = await expandZips(g.list); if (list.length) found = { dir: g.dir, list }; }
                     }
                     if (!found) {
@@ -1626,6 +1652,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                     if(l){
                         hist.push(l); hi=hist.length;
                         const [c,...a]=l.split(/\s+/);
+                        if(/^[a-z]:$/i.test(c) && !a.length){ cmds.cd([c[0].toLowerCase()==='c' ? 'c:' : '\\'+c[0]]); prompt(); T.scrollTop=T.scrollHeight; return; }
                         const fn=cmds[c.toLowerCase()];
                         fn?fn(a):out("'"+c+"'"+tr('notCommand'),'err');
                     }
