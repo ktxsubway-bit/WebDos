@@ -838,9 +838,13 @@
                 call(a){ if(a[0]) out('Calling batch file: ' + a[0]); else out(tr('reqParam'), 'err'); },
                 cd(a){
                     if(!a[0]) return out('C:\\' + cwd.join('\\').toUpperCase());
-                    const p=resolve(a[0]);
-                    if(!dirs.has(lc(p)) && p.length===1 && /^[a-z]$/i.test(p[0]) && p[0].toLowerCase()!=='c') addDir(p[0]);   // CD A : GitHub 폴더용 빈 폴더 자동 생성
-                    if(!dirs.has(lc(p)) && p.length===1 && p[0].toLowerCase()==='c') return out(ms('C is the system drive. Use A, B, D-Z.', 'C 는 시스템 드라이브입니다. A, B, D~Z 를 사용하세요.'), 'err');
+                    let p=resolve(a[0]);
+                    if(!dirs.has(lc(p))){   // 현재 위치에 없으면 루트 기준으로도 찾기 (CD B 후 CD A 처럼 드라이브 폴더 이동)
+                        const pr=resolve('\\'+a[0]), dm=/^[\\/]?([a-z])[\\/]*$/i.exec(a[0]);
+                        if(dirs.has(lc(pr))) p=pr;
+                        else if(dm && dm[1].toLowerCase()==='c') return out(ms('C is the system drive. Use A, B, D-Z.', 'C 는 시스템 드라이브입니다. A, B, D~Z 를 사용하세요.'), 'err');
+                        else if(dm){ p=[dm[1]]; addDir(p[0]); }   // 없는 A~Z 폴더는 빈 폴더로 생성 (GitHub 폴더용)
+                    }
                     if(!dirs.has(lc(p))) return out(tr('invDir'), 'err');
                     cwd=p.map((x,i)=>{const f=[...dirs].find(d=>d===lc(p.slice(0,i+1)));const o=[...files.values()].map(v=>v.p.split('/')).find(s=>s[i]&&s.slice(0,i+1).join('/').toLowerCase()===f);return o?o[i]:x});
                 },
