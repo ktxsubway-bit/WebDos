@@ -1275,9 +1275,9 @@ mount c .
 c:
 ${dirp?'cd '+dirp+'\n':''}${runLine}
 `;
-                // B 폴더의 스트리트파이터2 는 이동키를 방향키로 강제 (WASD / 숫자패드 → 방향키)
+                // B 폴더의 스트리트파이터2: 방향키를 게임이 인식하는 이동키(I/J/K/L)로 변환
                 keyRemap = (/^b\//i.test(path) && /street|sf2/i.test(path)) ? SF_KEYMAP : null;
-                if(keyRemap) out(ms('Street Fighter 2 detected: movement keys forced to ARROW keys (WASD / numpad also work as arrows).', '스트리트파이터2 감지: 이동키가 방향키로 고정됩니다 (WASD / 숫자패드도 방향키로 변환).'), 'yellow');
+                if(keyRemap) out(ms('Street Fighter 2 detected: ARROW keys are converted to the game movement keys (I/J/K/L).', '스트리트파이터2 감지: 방향키가 게임 이동키(I/J/K/L)로 변환됩니다.'), 'yellow');
                 const host=document.createElement('div'); host.style.cssText='position:absolute;inset:0';
                 $('dos').innerHTML=''; $('dos').appendChild(host); $('game').style.display='block';
                 try{
@@ -1836,10 +1836,9 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                 }
             });
 
-            // 이동키 강제 변환 (SF2 전용): 원래 키 입력은 막고 방향키 이벤트로 대신 전달
+            // SF2 전용: 방향키 → I/J/K/L (게임 쪽에는 I/J/K/L 키 입력으로 전달)
             const SF_KEYMAP = {
-                KeyW:['ArrowUp',38], KeyA:['ArrowLeft',37], KeyS:['ArrowDown',40], KeyD:['ArrowRight',39],
-                Numpad8:['ArrowUp',38], Numpad4:['ArrowLeft',37], Numpad2:['ArrowDown',40], Numpad6:['ArrowRight',39]
+                ArrowUp:['KeyI','i',73], ArrowLeft:['KeyJ','j',74], ArrowDown:['KeyK','k',75], ArrowRight:['KeyL','l',76]
             };
             window.addEventListener('keydown', remapKey, true);
             window.addEventListener('keyup', remapKey, true);
@@ -1849,9 +1848,9 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                 if(!m || e.ctrlKey || e.altKey || e.metaKey) return;
                 e.preventDefault();
                 e.stopImmediatePropagation();
-                const ne = new KeyboardEvent(e.type, { key:m[0], code:m[0], repeat:e.repeat, bubbles:true, cancelable:true });
-                Object.defineProperty(ne, 'keyCode', { get:()=>m[1] });
-                Object.defineProperty(ne, 'which', { get:()=>m[1] });
+                const ne = new KeyboardEvent(e.type, { key:m[1], code:m[0], repeat:e.repeat, bubbles:true, cancelable:true });
+                Object.defineProperty(ne, 'keyCode', { get:()=>m[2] });
+                Object.defineProperty(ne, 'which', { get:()=>m[2] });
                 (e.target || document).dispatchEvent(ne);
             }
 
