@@ -42,7 +42,7 @@
     </div>
 
     <div id="game">
-        <button id="x">■ EXIT (ESC)</button>
+        <button id="x">■ EXIT (END)</button>
         <div id="dos"></div>
     </div>
     <input type="file" id="fz" multiple accept=".zip,.jsdos,*" hidden>
@@ -100,7 +100,7 @@
                     uploadedHeader: "--- UPLOADED FILE LIST ---",
                     editorTitle: "WEB-DOS EDITOR",
                     editorHint: "[Ctrl+S] Save & Exit | [ESC] Cancel",
-                    exitBtn: "■ EXIT (ESC)",
+                    exitBtn: "■ EXIT (END)",
                     sysInfoOS: "OS Version:                1.07.437 Build 2026",
                     sysInfoHost: "Host Name:                 WEB-DOS-PC",
                     sysInfoType: "System Type:               x86/x64 Web Browser Environment",
@@ -172,7 +172,7 @@
                     uploadedHeader: "--- 업로드된 파일 목록 ---",
                     editorTitle: "WEB-DOS 에디터",
                     editorHint: "[Ctrl+S] 저장 및 종료 | [ESC] 취소",
-                    exitBtn: "■ 종료 (ESC)",
+                    exitBtn: "■ 종료 (END)",
                     sysInfoOS: "OS 버전:                   1.07.437 Build 2026",
                     sysInfoHost: "호스트 이름:               WEB-DOS-PC",
                     sysInfoType: "시스템 종류:               x86/x64 웹 브라우저 가상 환경",
@@ -244,7 +244,7 @@
                     uploadedHeader: "--- アップロード済みファイル一覧 ---",
                     editorTitle: "WEB-DOS エディタ",
                     editorHint: "[Ctrl+S] 保存して終了 | [ESC] キャンセル",
-                    exitBtn: "■ 終了 (ESC)",
+                    exitBtn: "■ 終了 (END)",
                     sysInfoOS: "OSバージョン:               1.07.437 Build 2026",
                     sysInfoHost: "ホスト名:                   WEB-DOS-PC",
                     sysInfoType: "システムの種類:             x86/x64 ブラウザ仮想環境",
@@ -316,7 +316,7 @@
                     uploadedHeader: "--- 已上传文件列表 ---",
                     editorTitle: "WEB-DOS 编辑器",
                     editorHint: "[Ctrl+S] 保存并退出 | [ESC] 取消",
-                    exitBtn: "■ 退出 (ESC)",
+                    exitBtn: "■ 退出 (END)",
                     sysInfoOS: "OS 版本:                    1.07.437 Build 2026",
                     sysInfoHost: "主机名:                    WEB-DOS-PC",
                     sysInfoType: "系统类型:                  x86/x64 浏览器虚拟环境",
@@ -1278,7 +1278,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                 const host=document.createElement('div'); host.style.cssText='position:absolute;inset:0';
                 $('dos').innerHTML=''; $('dos').appendChild(host); $('game').style.display='block';
                 try{
-                    player = await window.Dos(host,{dosboxConf:conf,initFs:sel.map(v=>({path:rel(v.p),contents:v.d.slice()})),autoStart:true,workerThread:!inClaude,...(dosSrc.pre?{pathPrefix:dosSrc.pre,pathSuffix:''}:{})});
+                    player = await window.Dos(host,{onEvent:(ev,arg)=>{try{if(ev==='exit')stopGame();else if(ev==='ci-ready'&&arg&&arg.events)arg.events().onExit(()=>stopGame());}catch(_){}},dosboxConf:conf,initFs:sel.map(v=>({path:rel(v.p),contents:v.d.slice()})),autoStart:true,workerThread:!inClaude,...(dosSrc.pre?{pathPrefix:dosSrc.pre,pathSuffix:''}:{})});
                 }catch(e){$('game').style.display='none';out('Error: '+(e&&e.message||e),'err')}
             }
 
@@ -1830,10 +1830,17 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                         I.focus();
                         e.preventDefault();
                     }
-                } else {
-                    if(e.key==='Escape') stopGame();
                 }
             });
+
+            // 게임 종료: End 키 (캡처 단계에서 받아 에뮬레이터가 키를 가로채도 동작). ESC 로는 닫히지 않음
+            window.addEventListener('keydown', e => {
+                if($('game').style.display === 'block' && e.key === 'End') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    stopGame();
+                }
+            }, true);
 
             window.addEventListener('error', e => {
                 if($('game').style.display === 'block') {
