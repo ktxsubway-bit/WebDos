@@ -428,7 +428,7 @@
                     TITLE: "TITLE - Sets window title.",
                     TREE: "TREE - Graphically displays directory structure.",
                     TYPE: "TYPE filename - Displays text file contents.",
-                    LOAD: "LOAD A-Z [-v] - Loads files from a GitHub folder (a-z except c). | LOAD [N|name|*]: any zip in repo",
+                    LOAD: "CD A, then LOAD [-v] - Loads files from a GitHub folder (a-z except c).",
                     UPLOAD: "UPLOAD [-f] - Uploads files or directory zip.",
                     VER: "VER - Displays DOS version.",
                     VERIFY: "VERIFY - Verifies file writing.",
@@ -522,7 +522,7 @@
                     TITLE: "TITLE - 창 제목을 설정합니다.",
                     TREE: "TREE - 디렉토리 구조를 그래픽으로 표시합니다.",
                     TYPE: "TYPE 파일명 - 텍스트 파일의 내용을 출력합니다.",
-                    LOAD: "LOAD A-Z [-v] - 깃허브 폴더(c 제외 a~z)의 파일을 불러옵니다. | LOAD [N|name|*]: any zip in repo",
+                    LOAD: "CD A, then LOAD [-v] - 깃허브 폴더(c 제외 a~z)의 파일을 불러옵니다.",
                     UPLOAD: "UPLOAD [-f] - 파일 또는 폴더 zip 선택창을 엽니다.",
                     VER: "VER - WEB-DOS 버전을 표시합니다.",
                     VERIFY: "VERIFY - 파일 기록 검증 여부를 설정합니다.",
@@ -616,7 +616,7 @@
                     TITLE: "TITLE - ウィンドウタイトルを設定します。",
                     TREE: "TREE - ディレクトリ構造をグラフィカルに表示します。",
                     TYPE: "TYPE ファイル名 - テキストファイルの内容を表示します。",
-                    LOAD: "LOAD A-Z [-v] - GitHubフォルダ(cを除くa～z)のファイルを読み込みます。 | LOAD [N|name|*]: any zip in repo",
+                    LOAD: "CD A, then LOAD [-v] - GitHubフォルダ(cを除くa～z)のファイルを読み込みます。",
                     UPLOAD: "UPLOAD [-f] - ファイルまたはフォルダZIPをアップロードします。",
                     VER: "VER - WEB-DOSのバージョンを表示します。",
                     VERIFY: "VERIFY - ファイル書き込みの検証を設定します。",
@@ -710,7 +710,7 @@
                     TITLE: "TITLE - 设置命令提示符窗口的窗口标题。",
                     TREE: "TREE - 以图形方式显示驱动器或路径的目录结构。",
                     TYPE: "TYPE 文件名 - 显示文本文件的内容。",
-                    LOAD: "LOAD A-Z [-v] - 从 GitHub 文件夹(除 c 外的 a~z)加载文件。 | LOAD [N|name|*]: any zip in repo",
+                    LOAD: "CD A, then LOAD [-v] - 从 GitHub 文件夹(除 c 外的 a~z)加载文件。",
                     UPLOAD: "UPLOAD [-f] - 打开文件或文件夹 zip 上传窗口。",
                     VER: "VER - 显示 WEB-DOS 版本。",
                     VERIFY: "VERIFY - 告诉系统是否验证文件已正确写入。",
@@ -839,6 +839,8 @@
                 cd(a){
                     if(!a[0]) return out('C:\\' + cwd.join('\\').toUpperCase());
                     const p=resolve(a[0]);
+                    if(!dirs.has(lc(p)) && p.length===1 && /^[a-z]$/i.test(p[0]) && p[0].toLowerCase()!=='c') addDir(p[0]);   // CD A : GitHub 폴더용 빈 폴더 자동 생성
+                    if(!dirs.has(lc(p)) && p.length===1 && p[0].toLowerCase()==='c') return out(ms('C is the system drive. Use A, B, D-Z.', 'C 는 시스템 드라이브입니다. A, B, D~Z 를 사용하세요.'), 'err');
                     if(!dirs.has(lc(p))) return out(tr('invDir'), 'err');
                     cwd=p.map((x,i)=>{const f=[...dirs].find(d=>d===lc(p.slice(0,i+1)));const o=[...files.values()].map(v=>v.p.split('/')).find(s=>s[i]&&s.slice(0,i+1).join('/').toLowerCase()===f);return o?o[i]:x});
                 },
@@ -1691,8 +1693,10 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
 
             cmds.load = async function (a) {
                 verbose = a.some(x => /^[-\/]v$/i.test(x)); dbgBuf.length = 0;
-                const L = (a.find(x => !/^[-\/]/.test(x)) || '').replace(/[:\\\/]+$/, '').toLowerCase();
-                if (!L || !/^[a-z]$/.test(L)) return loadAny(a);
+                const flags = a.filter(x => /^[-\/]/.test(x));
+                const L = (cwd[0] || '').toLowerCase();                 // 현재 위치(CD A)가 불러올 GitHub 폴더
+                if (!/^[a-z]$/.test(L) || L === 'c') return out(ms('Enter the folder first:  CD A  then  LOAD', '먼저 폴더로 이동하세요:  CD A  입력 후  LOAD'), 'err');
+                a = [L, ...flags];
                 if (L === 'c') return out(lm('reserved'), 'err');
                 if (location.protocol === 'file:') return out(lm('local'), 'err');
                 if (loading) return;
@@ -1768,7 +1772,8 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                     if(l){
                         hist.push(l); hi=hist.length;
                         const [c,...a]=l.split(/\s+/);
-                        const fn=cmds[c.toLowerCase()];
+                        const dm=/^([a-z]):$/i.exec(c);
+                        const fn=cmds[c.toLowerCase()] || (dm ? (dm[1].toLowerCase()==='c' ? (()=>{cwd=[]}) : (()=>cmds.cd(['\\'+dm[1].toUpperCase()]))) : null);   // A: B: D: ... / C: = 루트
                         fn?fn(a):out("'"+c+"'"+tr('notCommand'),'err');
                     }
                     prompt(); T.scrollTop=T.scrollHeight;
