@@ -42,7 +42,7 @@
     </div>
 
     <div id="game">
-        <button id="x">■ EXIT (ESC)</button>
+        <button id="x">■ EXIT (END)</button>
         <div id="dos"></div>
     </div>
     <input type="file" id="fz" multiple accept=".zip,.jsdos,*" hidden>
@@ -100,7 +100,7 @@
                     uploadedHeader: "--- UPLOADED FILE LIST ---",
                     editorTitle: "WEB-DOS EDITOR",
                     editorHint: "[Ctrl+S] Save & Exit | [ESC] Cancel",
-                    exitBtn: "■ EXIT (ESC)",
+                    exitBtn: "■ EXIT (END)",
                     sysInfoOS: "OS Version:                1.08.437 Build 2026",
                     sysInfoHost: "Host Name:                 WEB-DOS-PC",
                     sysInfoType: "System Type:               x86/x64 Web Browser Environment",
@@ -172,7 +172,7 @@
                     uploadedHeader: "--- 업로드된 파일 목록 ---",
                     editorTitle: "WEB-DOS 에디터",
                     editorHint: "[Ctrl+S] 저장 및 종료 | [ESC] 취소",
-                    exitBtn: "■ 종료 (ESC)",
+                    exitBtn: "■ 종료 (END)",
                     sysInfoOS: "OS 버전:                   1.08.437 Build 2026",
                     sysInfoHost: "호스트 이름:               WEB-DOS-PC",
                     sysInfoType: "시스템 종류:               x86/x64 웹 브라우저 가상 환경",
@@ -244,7 +244,7 @@
                     uploadedHeader: "--- アップロード済みファイル一覧 ---",
                     editorTitle: "WEB-DOS エディタ",
                     editorHint: "[Ctrl+S] 保存して終了 | [ESC] キャンセル",
-                    exitBtn: "■ 終了 (ESC)",
+                    exitBtn: "■ 終了 (END)",
                     sysInfoOS: "OSバージョン:               1.08.437 Build 2026",
                     sysInfoHost: "ホスト名:                   WEB-DOS-PC",
                     sysInfoType: "システムの種類:             x86/x64 ブラウザ仮想環境",
@@ -316,7 +316,7 @@
                     uploadedHeader: "--- 已上传文件列表 ---",
                     editorTitle: "WEB-DOS 编辑器",
                     editorHint: "[Ctrl+S] 保存并退出 | [ESC] 取消",
-                    exitBtn: "■ 退出 (ESC)",
+                    exitBtn: "■ 退出 (END)",
                     sysInfoOS: "OS 版本:                    1.08.437 Build 2026",
                     sysInfoHost: "主机名:                    WEB-DOS-PC",
                     sysInfoType: "系统类型:                  x86/x64 浏览器虚拟环境",
@@ -840,7 +840,10 @@
                     a=a.filter(x=>!/^\/d$/i.test(x));
                     if(!a[0]) return out('C:\\' + cwd.join('\\').toUpperCase());
                     if(/^c:?[\\/]*$/i.test(a[0]) && !dirs.has('c')){ cwd=[]; return; }
-                    const p=resolve(a[0]);
+                    let p=resolve(a[0]);
+                    // a~z(c 제외) 한 글자 폴더는 현재 위치와 상관없이 루트에서 찾음 (cd d → cd a)
+                    const dl=a[0].match(/^([abd-z]):?$/i);
+                    if(dl && !dirs.has(lc(p))) p=[dl[1].toLowerCase()];
                     if(p.length===1 && /^[abd-z]$/i.test(p[0])) addDir(p[0]);
                     if(!dirs.has(lc(p))) return out(tr('invDir'), 'err');
                     cwd=p.map((x,i)=>{const f=[...dirs].find(d=>d===lc(p.slice(0,i+1)));const o=[...files.values()].map(v=>v.p.split('/')).find(s=>s[i]&&s.slice(0,i+1).join('/').toLowerCase()===f);return o?o[i]:x});
@@ -1279,11 +1282,15 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                 }catch(e){$('game').style.display='none';out('Error: '+(e&&e.message||e),'err')}
             }
 
+            let stopping=false;
             async function stopGame(){
-                if($('game').style.display!=='block') return;
-                try{ if(player && typeof player.stop === 'function') await player.stop(); }catch(e){}
-                $('dos').innerHTML=''; player=null; $('game').style.display='none';
-                out(tr('gameClosed')); I.focus();
+                if(stopping || $('game').style.display!=='block') return;
+                stopping=true;
+                try{
+                    try{ if(player && typeof player.stop === 'function') await player.stop(); }catch(e){}
+                    $('dos').innerHTML=''; player=null; $('game').style.display='none';
+                    out(tr('gameClosed')); I.focus();
+                }finally{ stopping=false; }
             }
             $('x').onclick=stopGame;
 
@@ -1674,7 +1681,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                 }
             };
 
-            window.addEventListener('keydown', e => {
+            window.addEventListener('keydown', async e => {
                 if($('editor').style.display === 'flex') {
                     if(e.key === 'Escape') {
                         $('editor').style.display = 'none';
@@ -1690,10 +1697,11 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                         I.focus();
                         e.preventDefault();
                     }
-                } else {
-                    if(e.key==='Escape') stopGame();
+                } else if(e.key==='End' && $('game').style.display==='block') {
+                    e.preventDefault(); e.stopPropagation();
+                    await stopGame();
                 }
-            });
+            }, true);
 
             window.addEventListener('error', e => {
                 if($('game').style.display === 'block') {
