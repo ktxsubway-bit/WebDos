@@ -1603,11 +1603,13 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                         return out(ms('No zip file found in this repository.', '저장소에서 zip 파일을 찾지 못했습니다.'), 'err');
                     }
                     let pick;
+                    const fm = /^[a-z]$/.test(q);
                     if (/^(\*|all)$/.test(q)) pick = zips;
                     else if (!q) pick = zips.length === 1 ? zips : null;
+                    else if (fm) pick = zips.filter(z => z.path.toLowerCase().startsWith(q + '/'));   // LOAD A → A/ 폴더의 모든 zip
                     else if (/^\d+$/.test(q)) pick = zips[+q - 1] ? [zips[+q - 1]] : [];
                     else pick = zips.filter(z => z.path.toLowerCase().includes(q));
-                    if (!pick || pick.length !== 1 && !/^(\*|all)$/.test(q)) {
+                    if (!pick || !pick.length || (pick.length !== 1 && !fm && !/^(\*|all)$/.test(q))) {
                         out(ms('Found zip files:', '찾은 zip 파일:'), 'cyan');
                         (pick && pick.length ? pick : zips).forEach(z => out('  ' + String(zips.indexOf(z) + 1).padStart(2) + '  ' + z.path, 'ok'));
                         return out(ms('Use LOAD <number|name>  or  LOAD *  (load all)', '사용법: LOAD <번호|이름>   또는   LOAD *  (전부 불러오기)'), 'yellow');
@@ -1658,11 +1660,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                         const g = await srcGithub(L);
                         if (g) { const list = await expandZips(g.list); if (list.length) found = { dir: g.dir, list }; }
                     }
-                    if (!found) {
-                        if (ghErr) out(lm('ghErr', ghErr), 'err');
-                        if (ghErr == 403 || ghErr == 429) out('  GitHub API rate limit. Wait a while, or put files.json (e.g. ["game.zip"]) in the folder.', 'yellow');
-                        return out(lm('notFound', L), 'err');
-                    }
+                    if (!found) { loading = false; return await loadAny(a); }   // 폴더 방식 실패 → 저장소 전체에서 zip 검색
 
                     for (const k of [...files.keys()]) if (k.startsWith(L + '/')) files.delete(k);
 
