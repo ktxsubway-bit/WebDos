@@ -428,7 +428,7 @@
                     TITLE: "TITLE - Sets window title.",
                     TREE: "TREE - Graphically displays directory structure.",
                     TYPE: "TYPE filename - Displays text file contents.",
-                    LOAD: "LOAD A-Z [-v] - Loads files from a GitHub folder (a-z except c).",
+                    LOAD: "LOAD A-Z [-v] - Loads files from a GitHub folder (a-z except c). | LOAD [N|name|*]: any zip in repo",
                     UPLOAD: "UPLOAD [-f] - Uploads files or directory zip.",
                     VER: "VER - Displays DOS version.",
                     VERIFY: "VERIFY - Verifies file writing.",
@@ -522,7 +522,7 @@
                     TITLE: "TITLE - 창 제목을 설정합니다.",
                     TREE: "TREE - 디렉토리 구조를 그래픽으로 표시합니다.",
                     TYPE: "TYPE 파일명 - 텍스트 파일의 내용을 출력합니다.",
-                    LOAD: "LOAD A-Z [-v] - 깃허브 폴더(c 제외 a~z)의 파일을 불러옵니다.",
+                    LOAD: "LOAD A-Z [-v] - 깃허브 폴더(c 제외 a~z)의 파일을 불러옵니다. | LOAD [N|name|*]: any zip in repo",
                     UPLOAD: "UPLOAD [-f] - 파일 또는 폴더 zip 선택창을 엽니다.",
                     VER: "VER - WEB-DOS 버전을 표시합니다.",
                     VERIFY: "VERIFY - 파일 기록 검증 여부를 설정합니다.",
@@ -616,7 +616,7 @@
                     TITLE: "TITLE - ウィンドウタイトルを設定します。",
                     TREE: "TREE - ディレクトリ構造をグラフィカルに表示します。",
                     TYPE: "TYPE ファイル名 - テキストファイルの内容を表示します。",
-                    LOAD: "LOAD A-Z [-v] - GitHubフォルダ(cを除くa～z)のファイルを読み込みます。",
+                    LOAD: "LOAD A-Z [-v] - GitHubフォルダ(cを除くa～z)のファイルを読み込みます。 | LOAD [N|name|*]: any zip in repo",
                     UPLOAD: "UPLOAD [-f] - ファイルまたはフォルダZIPをアップロードします。",
                     VER: "VER - WEB-DOSのバージョンを表示します。",
                     VERIFY: "VERIFY - ファイル書き込みの検証を設定します。",
@@ -710,7 +710,7 @@
                     TITLE: "TITLE - 设置命令提示符窗口的窗口标题。",
                     TREE: "TREE - 以图形方式显示驱动器或路径的目录结构。",
                     TYPE: "TYPE 文件名 - 显示文本文件的内容。",
-                    LOAD: "LOAD A-Z [-v] - 从 GitHub 文件夹(除 c 外的 a~z)加载文件。",
+                    LOAD: "LOAD A-Z [-v] - 从 GitHub 文件夹(除 c 外的 a~z)加载文件。 | LOAD [N|name|*]: any zip in repo",
                     UPLOAD: "UPLOAD [-f] - 打开文件或文件夹 zip 上传窗口。",
                     VER: "VER - 显示 WEB-DOS 版本。",
                     VERIFY: "VERIFY - 告诉系统是否验证文件已正确写入。",
@@ -1416,7 +1416,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
             const skipName = n => /(^|\/)(\.gitkeep|\.gitignore|\.DS_Store|Thumbs\.db)$/i.test(n) || /^__MACOSX\//.test(n);
             const isZip = n => /\.(zip|jsdos)$/i.test(n);
             // 커스텀 도메인/로컬에서 GitHub 자동 탐색을 쓰려면 'owner/repo' 를 적으세요 (github.io 에서는 비워도 됨)
-            const GH_REPO = '';
+            const GH_REPO = (new URLSearchParams(location.search).get('gh') || '').trim();   // 예: index.html?gh=owner/repo
             let loading = false, ghErr = null, verbose = false;
             const dbg = m => { if (verbose) out('  ' + m, 'yellow'); };
             const pageBase = () => {
@@ -1490,7 +1490,39 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                 } catch (e) { return null; }
             }
 
-            // 4) GitHub API 로 폴더 자동 탐색 (zip 이름이 뭐든 상관없음)
+            // 4) 저장소 파일 목록으로 폴더 자동 탐색 (zip 이름이 뭐든 상관없음)
+            //    GitHub API 는 IP당 시간당 60회 제한 → 모바일/공유 IP 에서 403 이 자주 나므로 jsDelivr 로 폴백
+            const treeCache = {};
+            async function ghTree(o, rp) {
+                const key = o + '/' + rp;
+                if (treeCache[key]) return treeCache[key];
+                for (const ref of ['HEAD', 'main', 'master']) {
+                    try {
+                        const r = await fetch('https://api.github.com/repos/' + key + '/git/trees/' + ref + '?recursive=1');
+                        dbg('API ' + key + '@' + ref + ' → ' + r.status);
+                        if (r.ok) {
+                            const j = await r.json();
+                            if (j.truncated) { dbg('API tree truncated → jsDelivr'); break; }
+                            return treeCache[key] = (j.tree || []).filter(t => t.type === 'blob').map(t => t.path);
+                        }
+                        ghErr = r.status;
+                        if (r.status === 404) return null;                 // 저장소가 아님 → 다음 후보
+                        if (r.status === 403 || r.status === 429) break;   // 호출 제한 → jsDelivr
+                    } catch (e) { ghErr = e.message || e; dbg('API error: ' + ghErr); }
+                }
+                for (const ref of ['main', 'master']) {
+                    try {
+                        const r = await fetch('https://data.jsdelivr.com/v1/package/gh/' + key + '@' + ref + '/flat');
+                        dbg('jsDelivr ' + key + '@' + ref + ' → ' + r.status);
+                        if (!r.ok) continue;
+                        const j = await r.json();
+                        const arr = (j.files || []).map(f => String(f.name).replace(/^\//, ''));
+                        if (arr.length) { ghErr = null; return treeCache[key] = arr; }
+                    } catch (e) { dbg('jsDelivr error: ' + (e.message || e)); }
+                }
+                return null;
+            }
+
             async function srcGithub(letter) {
                 const h = location.hostname, segs = location.pathname.split('/').filter(Boolean);
                 const isFile = x => /\.[a-z0-9]+$/i.test(x);
@@ -1503,34 +1535,113 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                     if (segs.length && !isFile(segs[0])) cands.push({ owner: o, repo: segs[0], rest: segs.slice(1) });
                     cands.push({ owner: o, repo: h, rest: segs });
                 }
+                if (!cands.length) dbg('GitHub 저장소를 알 수 없음 → 주소 뒤에 ?gh=owner/repo 를 붙이세요');
                 for (const c of cands) {
                     const rest = c.rest.slice();
                     if (rest.length && isFile(rest[rest.length - 1])) rest.pop();
                     const prefix = rest.length ? rest.join('/') + '/' : '';
-                    try {
-                        let r = null;
-                        for (const ref of ['HEAD', 'main', 'master']) {
-                            r = await fetch('https://api.github.com/repos/' + c.owner + '/' + c.repo + '/git/trees/' + ref + '?recursive=1');
-                            dbg('API ' + c.owner + '/' + c.repo + '@' + ref + ' → ' + r.status);
-                            if (r.ok) break;
-                        }
-                        if (!r || !r.ok) { ghErr = r && r.status; continue; }
-                        const j = await r.json();
-                        const want = (prefix + letter + '/').toLowerCase();
-                        const hits = (j.tree || []).filter(t => t.type === 'blob' && t.path.toLowerCase().startsWith(want) && !skipName(t.path));
-                        dbg('folder match: ' + hits.length + ' file(s)');
-                        if (!hits.length) continue;
-                        const dir = hits[0].path.slice(prefix.length).split('/')[0];
-                        return { dir, list: hits.map(t => { const rel = t.path.slice(prefix.length + dir.length + 1); return { path: rel, get: getter(dir, rel) }; }) };
-                    } catch (e) { ghErr = e.message || e; dbg('API error: ' + ghErr); }
+                    const tree = await ghTree(c.owner, c.repo);
+                    if (!tree) continue;
+                    const want = (prefix + letter + '/').toLowerCase();
+                    const hits = tree.filter(p => p.toLowerCase().startsWith(want) && !skipName(p));
+                    dbg('folder match: ' + hits.length + ' file(s)');
+                    if (!hits.length) continue;
+                    const dir = hits[0].slice(prefix.length).split('/')[0];
+                    return { dir, list: hits.map(p => { const rel = p.slice(prefix.length + dir.length + 1); return { path: rel, get: getter(dir, rel) }; }) };
                 }
                 return null;
+            }
+
+            // ================= LOAD (아무 zip) : 저장소 어디에 있든 zip/jsdos 를 찾아 불러오기 =================
+            const ms = (en, kr) => currentLang === 'kr' ? kr : en;
+            const ghCands = () => {
+                const h = location.hostname, segs = location.pathname.split('/').filter(Boolean);
+                const isFile = x => /\.[a-z0-9]+$/i.test(x);
+                const raw = [];
+                if (GH_REPO) { const [o, rp] = GH_REPO.split('/'); raw.push({ owner: o, repo: rp, rest: [] }); }
+                else if (/\.github\.io$/i.test(h)) {
+                    const o = h.split('.')[0];
+                    if (segs.length && !isFile(segs[0])) raw.push({ owner: o, repo: segs[0], rest: segs.slice(1) });
+                    raw.push({ owner: o, repo: h, rest: segs });
+                }
+                return raw.map(c => { const rest = c.rest.slice(); if (rest.length && isFile(rest[rest.length - 1])) rest.pop(); return { owner: c.owner, repo: c.repo, prefix: rest.length ? rest.join('/') + '/' : '' }; });
+            };
+            let zipFound = null;
+            async function findZips() {
+                if (zipFound) return zipFound;
+                const res = [], seen = new Set();
+                const add = (label, url) => { if (!isZip(label) || skipName(label) || /(^|\/)node_modules\//.test(label) || seen.has(url)) return; seen.add(url); res.push({ path: label, url }); };
+                try {   // 페이지와 같은 폴더의 files.json (zip 이름 목록)
+                    const r = await fetch(U('files.json'), { cache: 'no-cache' });
+                    dbg('GET files.json → ' + r.status);
+                    if (r.ok) { const j = await r.json(); (Array.isArray(j) ? j : (j.files || [])).forEach(x => typeof x === 'string' && add(x, U(encPath(x)))); }
+                } catch (e) {}
+                if (!res.length) for (const c of ghCands()) {
+                    const tree = await ghTree(c.owner, c.repo);
+                    if (!tree) continue;
+                    const pb = pageBase(), repoBase = c.prefix && pb.endsWith(c.prefix) ? pb.slice(0, pb.length - c.prefix.length) : pb;
+                    tree.forEach(p => add(c.prefix && p.startsWith(c.prefix) ? p.slice(c.prefix.length) : p,
+                        c.prefix && p.startsWith(c.prefix) ? U(encPath(p.slice(c.prefix.length))) : repoBase + encPath(p)));
+                    dbg('zip found: ' + res.length);
+                    if (res.length) break;
+                }
+                res.sort((x, y) => x.path.localeCompare(y.path));
+                if (res.length) zipFound = res;
+                return res;
+            }
+            async function loadAny(a) {
+                if (location.protocol === 'file:') return out(lm('local'), 'err');
+                if (loading) return;
+                loading = true; ghErr = null;
+                try {
+                    const q = a.filter(x => !/^[-\/]/.test(x)).join(' ').trim().toLowerCase();
+                    out(ms('Searching for zip files...', 'zip 파일 검색 중...'), 'cyan');
+                    const zips = await findZips();
+                    if (!zips.length) {
+                        if (ghErr) out(lm('ghErr', ghErr), 'err');
+                        if (ghErr == 403 || ghErr == 429) out('  GitHub API rate limit. Wait a while, or put files.json (e.g. ["game.zip"]) next to this page.', 'yellow');
+                        return out(ms('No zip file found in this repository.', '저장소에서 zip 파일을 찾지 못했습니다.'), 'err');
+                    }
+                    let pick;
+                    if (/^(\*|all)$/.test(q)) pick = zips;
+                    else if (!q) pick = zips.length === 1 ? zips : null;
+                    else if (/^\d+$/.test(q)) pick = zips[+q - 1] ? [zips[+q - 1]] : [];
+                    else pick = zips.filter(z => z.path.toLowerCase().includes(q));
+                    if (!pick || pick.length !== 1 && !/^(\*|all)$/.test(q)) {
+                        out(ms('Found zip files:', '찾은 zip 파일:'), 'cyan');
+                        (pick && pick.length ? pick : zips).forEach(z => out('  ' + String(zips.indexOf(z) + 1).padStart(2) + '  ' + z.path, 'ok'));
+                        return out(ms('Use LOAD <number|name>  or  LOAD *  (load all)', '사용법: LOAD <번호|이름>   또는   LOAD *  (전부 불러오기)'), 'yellow');
+                    }
+                    for (const z of pick) {
+                        out(ms('Downloading ', '다운로드 중 ') + z.path + ' ...', 'cyan');
+                        try {
+                            const r = await fetch(z.url);
+                            dbg('GET ' + z.url + ' → ' + r.status);
+                            if (!r.ok) throw new Error(r.status);
+                            const zip = await JSZip.loadAsync(new Uint8Array(await r.arrayBuffer()));
+                            const ents = Object.values(zip.files).filter(e => !e.dir && !skipName(e.name));
+                            const tops = new Set(ents.map(e => e.name.split('/')[0]));
+                            const strip = tops.size === 1 && ents.every(e => e.name.includes('/'));
+                            const root = base(z.path).replace(/\.[^.]+$/, '');
+                            const pre = cwd.length ? cwd.join('/') + '/' : '';
+                            let n = 0, bytes = 0;
+                            for (const e of ents) {
+                                const nm = strip ? e.name.split('/').slice(1).join('/') : e.name;
+                                const data = await e.async('uint8array');
+                                addFile(pre + root + '/' + nm, data); n++; bytes += data.length;
+                            }
+                            out('  ' + n + ms(' file(s) loaded (', '개 파일 로드 (') + (bytes / 1048576).toFixed(1) + ' MB) → ' + (pre + root).replace(/\//g, '\\').toUpperCase() + '\\', 'ok');
+                        } catch (e) { out('  ' + z.path + ': ' + (e && e.message || e), 'err'); }
+                    }
+                    out(ms('Done. Use DIR / RUN <file>.EXE', '완료. DIR 로 확인하고 RUN 파일.EXE 로 실행하세요.'), 'ok');
+                } catch (e) { out('Error: ' + (e && e.message || e), 'err'); }
+                finally { loading = false; }
             }
 
             cmds.load = async function (a) {
                 verbose = a.some(x => /^[-\/]v$/i.test(x));
                 const L = (a.find(x => !/^[-\/]/.test(x)) || '').replace(/[:\\\/]+$/, '').toLowerCase();
-                if (!L || !/^[a-z]$/.test(L)) return out(lm('usage'), 'err');
+                if (!L || !/^[a-z]$/.test(L)) return loadAny(a);
                 if (L === 'c') return out(lm('reserved'), 'err');
                 if (location.protocol === 'file:') return out(lm('local'), 'err');
                 if (loading) return;
@@ -1549,6 +1660,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                     }
                     if (!found) {
                         if (ghErr) out(lm('ghErr', ghErr), 'err');
+                        if (ghErr == 403 || ghErr == 429) out('  GitHub API rate limit. Wait a while, or put files.json (e.g. ["game.zip"]) in the folder.', 'yellow');
                         return out(lm('notFound', L), 'err');
                     }
 
