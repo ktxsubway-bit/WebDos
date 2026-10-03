@@ -1213,6 +1213,23 @@
                 })());
             }
 
+            // ===== 키 매핑: B 폴더(Street Fighter2)는 방향키 → I J K L 로 변환해서 게임에 전달 =====
+            let keyRemap=null;
+            const IJKL={ArrowUp:['i','KeyI',73],ArrowLeft:['j','KeyJ',74],ArrowDown:['k','KeyK',75],ArrowRight:['l','KeyL',76]};
+            const remapKey=e=>{
+                if(!keyRemap || e.isTrusted===false) return;
+                const m=keyRemap[e.key]; if(!m) return;
+                if($('game').style.display!=='block') return;
+                e.preventDefault(); e.stopImmediatePropagation();
+                const ev=new KeyboardEvent(e.type,{key:m[0],code:m[1],bubbles:true,cancelable:true,repeat:e.repeat,shiftKey:e.shiftKey,ctrlKey:e.ctrlKey,altKey:e.altKey,metaKey:e.metaKey});
+                for(const k of ['keyCode','which','charCode']) Object.defineProperty(ev,k,{get:()=>k==='charCode'?0:m[2]});
+                const ae=document.activeElement, host=$('dos');
+                const target=(ae && ae!==document.body && host.contains(ae)) ? ae : (host.querySelector('canvas')||host);
+                target.dispatchEvent(ev);
+            };
+            window.addEventListener('keydown',remapKey,true);
+            window.addEventListener('keyup',remapKey,true);
+
             async function launch(path){
                 if(inClaude) out(tr('claudeWarning'), 'err');
                 out(tr('dosPreparing'), 'ok');
@@ -1222,6 +1239,7 @@
                     return;
                 }
                 const top=path.includes('/')?path.split('/')[0]:null, tl=top&&top.toLowerCase()+'/';
+                keyRemap = (top && top.toLowerCase()==='b') ? IJKL : null;
                 const sel=[...files.values()].filter(v=>top?v.p.toLowerCase().startsWith(tl):true);
                 const rel=p=>top?p.slice(top.length+1):p, inner=rel(path);
                 const dirp=inner.includes('/')?inner.slice(0,inner.lastIndexOf('/')).replace(/\//g,'\\'):'';
@@ -1288,7 +1306,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                 stopping=true;
                 try{
                     try{ if(player && typeof player.stop === 'function') await player.stop(); }catch(e){}
-                    $('dos').innerHTML=''; player=null; $('game').style.display='none';
+                    $('dos').innerHTML=''; player=null; keyRemap=null; $('game').style.display='none';
                     out(tr('gameClosed')); I.focus();
                 }finally{ stopping=false; }
             }
@@ -1730,4 +1748,3 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
     </script>
 </body>
 </html>
-<!-- Developed by 김하준 -->
