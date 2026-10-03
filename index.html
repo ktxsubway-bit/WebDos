@@ -1430,7 +1430,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
             const GH_BRANCHES = ['main', 'master', 'HEAD'];
             setTimeout(() => { try { Object.keys(KNOWN).forEach(k => addDir(k)); } catch (e) {} }, 0);
             // 폴더별 알려진 ZIP 이름 (여기에 추가하면 API 없이도 바로 찾음)
-            const KNOWN = { a: ['w3d.zip'], b: ['Street Fighter2.zip'], d: ['1.01.11.zip'] };
+            const KNOWN = { a: ['w3d.zip'], b: ['Street Fighter2.zip'], d: ['심시티2000.zip'] };
             let loading = false, ghErr = null, verbose = false;
             const dbg = m => { if (verbose) out('  ' + m, 'yellow'); };
             const pageBase = () => {
@@ -1471,7 +1471,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                             dbg('unzip ' + it.path + ' (' + ents.length + ' files)');
                             for (const e of ents) res.push({ path: strip ? e.name.split('/').slice(1).join('/') : e.name, get: () => e.async('uint8array') });
                             continue;
-                        } catch (e) { dbg('unzip failed: ' + it.path + ' ' + (e.message || e)); }
+                        } catch (e) { dbg('unzip failed: ' + it.path + ' ' + (e.message || e)); continue; }
                     }
                     res.push(it);
                 }
@@ -1492,7 +1492,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
 
             // 2) 흔한 이름의 zip (game.zip / a.zip ...)
             async function srcZipNames(dir, L) {
-                for (const nm of [...(KNOWN[L] || []), 'game.zip', 'game.jsdos', L + '.zip', L.toUpperCase() + '.zip', L + '.jsdos']) {
+                for (const nm of [...new Set((KNOWN[L] || []).flatMap(n => [n, n.normalize('NFC'), n.normalize('NFD')])), 'game.zip', 'game.jsdos', L + '.zip', L.toUpperCase() + '.zip', L + '.jsdos']) {
                     try {
                         const r = await fetch(U(dir + '/' + encPath(nm)), { cache: 'no-cache' });
                         dbg('GET ' + dir + '/' + nm + ' → ' + r.status);
@@ -1593,8 +1593,11 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
                     dbg('base: ' + pageBase());
                     let found = null;
                     for (const d of [L, L.toUpperCase()]) {            // 깃허브는 대소문자 구분 → 둘 다 시도
-                        let list = (await srcManifest(d)) || (await srcZipNames(d, L)) || (await srcIndex(d));
-                        if (list) { list = await expandZips(list); if (list.length) { found = { dir: d, list }; break; } }
+                        for (const src of [() => srcManifest(d), () => srcZipNames(d, L), () => srcIndex(d)]) {
+                            let list = await src();
+                            if (list) { list = await expandZips(list); if (list.length) { found = { dir: d, list }; break; } }
+                        }
+                        if (found) break;
                     }
                     if (!found) {
                         const g = (await srcGithub(L)) || (await srcJsd(L));
@@ -1727,3 +1730,4 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
     </script>
 </body>
 </html>
+<!-- Developed by 김하준 -->
