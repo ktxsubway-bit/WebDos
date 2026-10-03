@@ -841,6 +841,7 @@
                     if(!a[0]) return out('C:\\' + cwd.join('\\').toUpperCase());
                     if(/^c:?[\\/]*$/i.test(a[0]) && !dirs.has('c')){ cwd=[]; return; }
                     const p=resolve(a[0]);
+                    if(p.length===1 && /^[abd-z]$/i.test(p[0])) addDir(p[0]);
                     if(!dirs.has(lc(p))) return out(tr('invDir'), 'err');
                     cwd=p.map((x,i)=>{const f=[...dirs].find(d=>d===lc(p.slice(0,i+1)));const o=[...files.values()].map(v=>v.p.split('/')).find(s=>s[i]&&s.slice(0,i+1).join('/').toLowerCase()===f);return o?o[i]:x});
                 },
@@ -1420,6 +1421,7 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
             // 커스텀 도메인/로컬에서 GitHub 자동 탐색을 쓰려면 'owner/repo' 를 적으세요 (github.io 에서는 비워도 됨)
             const GH_REPO = 'ktxsubway-bit/WebDos';
             const GH_BRANCHES = ['main', 'master', 'HEAD'];
+            setTimeout(() => { try { Object.keys(KNOWN).forEach(k => addDir(k)); } catch (e) {} }, 0);
             // 폴더별 알려진 ZIP 이름 (여기에 추가하면 API 없이도 바로 찾음)
             const KNOWN = { a: ['w3d.zip'], b: ['Street Fighter2.zip'], d: ['1.01.11.zip'] };
             let loading = false, ghErr = null, verbose = false;
@@ -1572,7 +1574,8 @@ ${dirp?'cd '+dirp+'\n':''}${runLine}
 
             cmds.load = async function (a) {
                 verbose = a.some(x => /^[-\/]v$/i.test(x));
-                const L = (a.find(x => !/^[-\/]/.test(x)) || '').replace(/[:\\\/]+$/, '').toLowerCase();
+                let L = (a.find(x => !/^[-\/]/.test(x)) || '').replace(/[:\\\/]+$/, '').toLowerCase();
+                if (!L && cwd.length && /^[a-z]$/i.test(cwd[0])) L = cwd[0].toLowerCase();
                 if (!L || !/^[a-z]$/.test(L)) return out(lm('usage'), 'err');
                 if (L === 'c') return out(lm('reserved'), 'err');
                 if (location.protocol === 'file:') return out(lm('local'), 'err');
